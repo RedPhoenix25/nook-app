@@ -1,0 +1,2 @@
+ALTER TABLE notes
+ADD COLUMN is_pinned BOOLEAN DEFAULT false;

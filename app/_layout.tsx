@@ -1,0 +1,275 @@
+import "../global.css";
+import React, { useEffect, useState } from "react";
+import { Stack, useRouter, useSegments } from "expo-router";
+import { View, ActivityIndicator } from "react-native";
+import {
+  useFonts,
+  DMSerifDisplay_400Regular,
+} from "@expo-google-fonts/dm-serif-display";
+import {
+  Inter_400Regular,
+  Inter_600SemiBold,
+} from "@expo-google-fonts/inter";
+import * as SplashScreen from "expo-splash-screen";
+import { StatusBar } from "expo-status-bar";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { supabase } from "@/lib/supabase";
+import type { Session } from "@supabase/supabase-js";
+import { AppLockProvider, AppLockContext } from "@/hooks/useAppLock";
+import { AppLockScreen } from "@/components/ui/AppLockScreen";
+import { SyncProvider } from "@/hooks/useSyncEngine";
+
+// Keep splash visible while we load fonts + session
+SplashScreen.preventAutoHideAsync();
+
+import * as SecureStore from 'expo-secure-store';
+
+export type SpaceMeta = {
+  id: string;
+  name: string | null;
+  partner?: {
+    display_name: string;
+    avatar_url: string | null;
+  };
+};
+
+export const SpaceContext = React.createContext({
+  spaces: [] as SpaceMeta[],
+  activeSpaceId: null as string | null,
+  currentUserProfile: null as any | null,
+  switchSpace: async (spaceId: string) => {},
+  refreshSpace: async () => {},
+  hasSpace: false as boolean | null,
+});
+
+export function useSpace() {
+  return React.useContext(SpaceContext);
+}
+
+function AuthGate({ session, isLoading, children }: { session: Session | null; isLoading: boolean; children: React.ReactNode }) {
+  const router = useRouter();
+  const segments = useSegments();
+  const [spaces, setSpaces] = useState<SpaceMeta[]>([]);
+  const [activeSpaceId, setActiveSpaceId] = useState<string | null>(null);
+  const [currentUserProfile, setCurrentUserProfile] = useState<any | null>(null);
+  const [checkingSpace, setCheckingSpace] = useState(false);
+  const [hasSpace, setHasSpace] = useState<boolean | null>(null);
+
+  const refreshSpace = async () => {
+    if (!session) {
+      setHasSpace(null);
+      setSpaces([]);
+      setActiveSpaceId(null);
+      setCurrentUserProfile(null);
+      return;
+    }
+    setCheckingSpace(true);
+    
+    // Fetch all active space memberships for the user, along with space data and other members
+    const { data, error } = await supabase
+      .from("space_members")
+      .select(`
+        space_id,
+        spaces:space_id (
+          id,
+          name,
+          space_members (
+            user_id,
+            profiles (
+              id,
+              display_name,
+              avatar_url
+            )
+          )
+        )
+      `)
+      .eq("user_id", session.user.id)
+      .eq("is_active", true);
+      
+    if (error || !data || data.length === 0) {
+      setHasSpace(false);
+      setSpaces([]);
+      setActiveSpaceId(null);
+      setCurrentUserProfile(null);
+    } else {
+      setHasSpace(true);
+      
+      let foundCurrentUserProfile = null;
+      
+      const parsedSpaces: SpaceMeta[] = data.map((row: any) => {
+        const space = row.spaces;
+        // Find the partner (a member who is not the current user)
+        const partnerMember = space.space_members?.find((m: any) => m.user_id !== session.user.id);
+        const partnerProfile = partnerMember?.profiles;
+        
+        // Also capture the current user's profile
+        if (!foundCurrentUserProfile) {
+          const myMember = space.space_members?.find((m: any) => m.user_id === session.user.id);
+          if (myMember?.profiles) {
+            foundCurrentUserProfile = myMember.profiles;
+          }
+        }
+        
+        return {
+          id: space.id,
+          name: space.name,
+          partner: partnerProfile ? {
+            display_name: partnerProfile.display_name,
+            avatar_url: partnerProfile.avatar_url,
+          } : undefined
+        };
+      });
+      
+      setSpaces(parsedSpaces);
+      setCurrentUserProfile(foundCurrentUserProfile);
+      
+      // Determine active space
+      const lastActiveId = await SecureStore.getItemAsync('last_active_space_id');
+      if (lastActiveId && parsedSpaces.some(s => s.id === lastActiveId)) {
+        setActiveSpaceId(lastActiveId);
+      } else {
+        // Fallback to the first space
+        setActiveSpaceId(parsedSpaces[0].id);
+        await SecureStore.setItemAsync('last_active_space_id', parsedSpaces[0].id);
+      }
+    }
+    setCheckingSpace(false);
+  };
+
+  const switchSpace = async (spaceId: string) => {
+    if (spaces.some(s => s.id === spaceId)) {
+      setActiveSpaceId(spaceId);
+      await SecureStore.setItemAsync('last_active_space_id', spaceId);
+    }
+  };
+
+  // Check if user belongs to an active space when session changes
+  useEffect(() => {
+    refreshSpace();
+  }, [session]);
+
+  // Handle routing once loading is complete
+  useEffect(() => {
+    if (isLoading || checkingSpace || hasSpace === null && session) return;
+
+    const inAuthGroup = segments[0] === "(auth)";
+    const inOnboarding = segments[0] === "(onboarding)";
+
+    if (!session && !inAuthGroup) {
+      // Not signed in → send to sign-in
+      router.replace("/(auth)/sign-in");
+    } else if (session) {
+      if (hasSpace) {
+        // Signed in WITH space → go to app
+        // We only auto-redirect if they are on auth screens.
+        // We don't redirect out of onboarding so they can read their new invite code.
+        if (inAuthGroup) router.replace("/(app)");
+      } else {
+        // Signed in WITHOUT space → go to onboarding
+        if (!inOnboarding) router.replace("/(onboarding)");
+      }
+    }
+  }, [session, isLoading, segments, hasSpace, checkingSpace]);
+
+  return (
+    <SpaceContext.Provider value={{ spaces, activeSpaceId, currentUserProfile, switchSpace, refreshSpace, hasSpace }}>
+      {children}
+    </SpaceContext.Provider>
+  );
+}
+
+export default function RootLayout() {
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [fontsLoaded] = useFonts({
+    DMSerifDisplay_400Regular,
+    Inter_400Regular,
+    Inter_600SemiBold,
+  });
+
+  useEffect(() => {
+    // Guard against placeholder/missing Supabase credentials
+    const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? "";
+    const isPlaceholder =
+      !supabaseUrl ||
+      supabaseUrl === "https://your-project-ref.supabase.co" ||
+      supabaseUrl.includes("your-project-ref");
+
+    if (isPlaceholder) {
+      // Skip network call — just go to sign-in as unauthenticated
+      setSession(null);
+      setIsLoading(false);
+      return;
+    }
+
+    // Fetch initial session with a timeout fallback
+    const timeout = setTimeout(() => {
+      setSession(null);
+      setIsLoading(false);
+    }, 5000);
+
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      clearTimeout(timeout);
+      setSession(s);
+      setIsLoading(false);
+    }).catch(() => {
+      clearTimeout(timeout);
+      setSession(null);
+      setIsLoading(false);
+    });
+
+    // Listen to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, s) => {
+        setSession(s);
+      }
+    );
+
+    return () => {
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (fontsLoaded && !isLoading) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, isLoading]);
+
+  if (!fontsLoaded || isLoading) {
+    return (
+      <View className="flex-1 bg-cream items-center justify-center">
+        <ActivityIndicator size="large" color="#E06D53" />
+      </View>
+    );
+  }
+
+  return (
+    <SafeAreaProvider>
+      <StatusBar style="dark" backgroundColor="#FDFBF7" />
+      <AppLockProvider>
+        <AuthGate session={session} isLoading={isLoading}>
+          <AppLockContext.Consumer>
+            {({ isLocked, unlock }) => (
+              <View className="flex-1">
+                <SyncProvider>
+                  <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="(auth)" />
+                    <Stack.Screen name="(onboarding)" />
+                    <Stack.Screen name="(app)" />
+                    <Stack.Screen name="+not-found" />
+                  </Stack>
+                  {isLocked && session && (
+                    <AppLockScreen onUnlock={unlock} />
+                  )}
+                </SyncProvider>
+              </View>
+            )}
+          </AppLockContext.Consumer>
+        </AuthGate>
+      </AppLockProvider>
+    </SafeAreaProvider>
+  );
+}

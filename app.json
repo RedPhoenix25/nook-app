@@ -1,0 +1,48 @@
+{
+  "name": "nook",
+  "slug": "nook",
+  "version": "1.0.0",
+  "orientation": "portrait",
+  "icon": "./assets/images/icon.png",
+  "scheme": "nook",
+  "userInterfaceStyle": "automatic",
+  "newArchEnabled": true,
+  "splash": {
+    "image": "./assets/images/nook-splash.png",
+    "resizeMode": "contain",
+    "backgroundColor": "#FDFBF7"
+  },
+  "ios": {
+    "supportsTablet": false,
+    "bundleIdentifier": "com.nook.app"
+  },
+  "android": {
+    "adaptiveIcon": {
+      "foregroundImage": "./assets/images/adaptive-icon.png",
+      "backgroundColor": "#FDFBF7"
+    },
+    "package": "com.nook.app",
+    "edgeToEdgeEnabled": true
+  },
+  "web": {
+    "bundler": "metro",
+    "output": "static",
+    "favicon": "./assets/images/favicon.png"
+  },
+  "plugins": [
+    "expo-router",
+    "expo-secure-store",
+    [
+      "expo-image-picker",
+      {
+        "photosPermission": "Allow nook to access your photos to share memories with your partner.",
+        "cameraPermission": "Allow nook to use your camera to take new photos."
+      }
+    ],
+    "expo-audio",
+    "expo-sqlite"
+  ],
+  "experiments": {
+    "typedRoutes": false
+  }
+}
