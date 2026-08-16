@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useFeed } from "./useFeed";
 import type { DailyPrompt, PromptResponse } from "@/types/database.types";
 import { getDb } from "@/lib/database";
@@ -16,12 +16,20 @@ export function useMemories() {
   const [memories, setMemories] = useState<MemoryPrompt[]>([]);
   const [loading, setLoading] = useState(true);
   const { lastSyncTime } = useSyncEngine();
+  const isInitialLoad = useRef(true);
+
+  // Use stable primitive IDs as deps to avoid re-renders on object reference changes
+  const currentUserId = currentUserProfile?.id ?? null;
+  const partnerId = partner?.id ?? null;
 
   useEffect(() => {
-    if (!spaceId || !currentUserProfile) return;
+    if (!spaceId || !currentUserId) return;
 
     async function fetchMemories() {
-      setLoading(true);
+      // Only show spinner on the very first load, not on background syncs
+      if (isInitialLoad.current) {
+        setLoading(true);
+      }
 
       try {
         const db = await getDb();
@@ -58,9 +66,9 @@ export function useMemories() {
 
           const group = grouped.get(prompt.id)!;
           
-          if (row.user_id === currentUserProfile.id) {
+          if (row.user_id === currentUserId) {
             group.myResponse = row as PromptResponse;
-          } else if (partner && row.user_id === partner.id) {
+          } else if (partnerId && row.user_id === partnerId) {
             group.partnerResponse = row as PromptResponse;
           }
           
@@ -79,12 +87,13 @@ export function useMemories() {
       } catch (err) {
         console.error("Error fetching memories from SQLite:", err);
       } finally {
+        isInitialLoad.current = false;
         setLoading(false);
       }
     }
 
     fetchMemories();
-  }, [spaceId, currentUserProfile, partner, lastSyncTime]); // Reload from local db when sync completes
+  }, [spaceId, currentUserId, partnerId, lastSyncTime]); // Reload from local db when sync completes
 
   return { memories, loading };
 }

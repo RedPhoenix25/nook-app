@@ -12,6 +12,9 @@ This file serves as the central source of truth for the project's development pr
   - Built a background `SyncProvider` (`useSyncEngine.ts`) that listens to network connectivity (`@react-native-community/netinfo`).
   - Implemented an `offline_mutations` queue that stores actions (inserts/updates/deletes) and pushes them to Supabase in the background when online.
   - Refactored `useFeed`, `useDailyPrompt`, and `useMemories` to read exclusively from the local SQLite database for instant (0ms) load times.
+  - **Fixed Sync Engine Reliability**: Updated the syncer to auto-clear unrecoverable mutation errors (e.g. RLS 42501) that were permanently blocking the offline queue. Fixed stale closures in Realtime listeners using refs. Added a periodic fallback sync interval (10s) to catch dropped WebSocket events. Fixed the stale-note delete logic so it correctly avoids deleting fresh notes that are still pending upload.
+  - **Fixed Android Image Uploads**: Modified `CreateNoteModal` to instantly upload images to Supabase using the base64 data already in memory instead of relying on unstable `file://` temporary paths that were getting deleted by Android before the background sync could process them.
+  - **Fixed Authorship Tagging**: Added the partner's `id` to `SpaceMeta` so that the UI can accurately distinguish which user authored a note (fixing the "YOU" tag bug on partner notes).
 - **Smart Prompt Generation**: Replaced hardcoded fallback prompts with a robust backend `prompts` table containing 80 categorized questions. Updated `useSyncEngine.tsx` to cache this prompt bank locally, allowing `useDailyPrompt.ts` to intelligently filter out past prompts and generate fresh, non-repeating daily questions even while completely offline.
 - **UI/UX Global Audit Pass**: 
   - Redesigned the Onboarding Hub (`Welcome to NOOK`) with premium glassmorphism (`expo-blur`), smooth entrance animations (`react-native-reanimated`), and a clean, luxury aesthetic.
@@ -71,11 +74,12 @@ This file serves as the central source of truth for the project's development pr
 - `[x]` Implement App Lock security feature (Biometrics/PIN).
 - `[x]` Migrate to Local-First Offline Architecture (`expo-sqlite`).
 - `[x]` Implement Multiple Spaces support.
+- `[x]` Implement Push Notifications (Daily Reminders, Nudges, Events).
 
 ## Current / Ongoing
 - **Architecture Scaling**: Refining data models to support more complex inter-space relationships.
 
 ## To Do (Upcoming)
-- Finalize Row-Level Security (RLS) enforcement and data validation.
+- `[x]` Finalize Row-Level Security (RLS) enforcement and data validation.
 - `[x]` Migrate Media to Supabase Storage (Background uploads for offline support).
-- [ ] Advanced offline conflict resolution (CRDT-lite).
+- `[x]` Advanced offline conflict resolution (CRDT-lite / LWW).

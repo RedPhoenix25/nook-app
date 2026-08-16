@@ -21,6 +21,7 @@ import { AudioPlayer } from "./AudioPlayer";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
+import { sendPushNotification } from "@/hooks/usePushNotifications";
 
 const EDITOR_STYLE = {
   backgroundColor: 'transparent',
@@ -33,10 +34,12 @@ interface CreateNoteModalProps {
   visible: boolean;
   onClose: () => void;
   spaceId: string | null;
-  onSubmit: (content: string, type: "text" | "photo" | "audio", mediaUrl?: string) => Promise<{ error: any }>;
+  onSubmit: (content: string, type: "text" | "photo" | "audio", mediaUrl?: string) => Promise<{ error: any, data?: any }>;
   initialContent?: string;
   initialMediaUrl?: string;
   initialMediaType?: "text" | "photo" | "audio";
+  partner?: { expo_push_token?: string | null } | null;
+  currentUserProfile?: { display_name?: string | null } | null;
 }
 
 export function CreateNoteModal({
@@ -47,6 +50,8 @@ export function CreateNoteModal({
   initialContent = "",
   initialMediaUrl = "",
   initialMediaType,
+  partner,
+  currentUserProfile,
 }: CreateNoteModalProps) {
   const [inputText, setInputText] = useState("");
   const [isPosting, setIsPosting] = useState(false);
@@ -209,24 +214,110 @@ export function CreateNoteModal({
       let finalMediaUrl = "";
       
       if (selectedImageUri) {
-        if (!selectedImageUri.startsWith('http') && selectedImageBase64) {
-          // If it's a local file, just append the aspect ratio and pass it along
-          // The sync engine will handle the actual upload later
-          finalMediaUrl = `${selectedImageUri}?ar=${aspectRatio.toFixed(3)}`;
-        } else {
+        if (selectedImageUri.startsWith('http')) {
+          // Already a cloud URL (editing existing note)
           finalMediaUrl = selectedImageUri;
+        } else if (selectedImageBase64 && spaceId) {
+          // We have base64 — upload NOW before saving the note
+          try {
+            const { decode } = await import("base64-arraybuffer");
+            const decodedBuffer = decode(selectedImageBase64);
+            const ext = selectedImageUri.split('.').pop()?.toLowerCase() || 'jpg';
+            const fileName = `${spaceId}/${Date.now()}.${ext}`;
+            const contentType = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+            
+            const { createClient } = await import("@supabase/supabase-js");
+            const { supabase: sb } = await import("@/lib/supabase");
+            
+            const { error: uploadError } = await sb.storage
+              .from('space_media')
+              .upload(fileName, decodedBuffer, { contentType });
+            
+            if (uploadError) {
+              console.error('[CreateNote] Upload error:', JSON.stringify(uploadError));
+              // Fall back to local URI — sync engine will try again
+              finalMediaUrl = `${selectedImageUri}?ar=${aspectRatio.toFixed(3)}`;
+            } else {
+              const { data: urlData } = sb.storage.from('space_media').getPublicUrl(fileName);
+              finalMediaUrl = `${urlData.publicUrl}?ar=${aspectRatio.toFixed(3)}`;
+              console.log('[CreateNote] Upload success:', finalMediaUrl);
+            }
+          } catch (uploadErr) {
+            console.error('[CreateNote] Upload exception:', uploadErr);
+            finalMediaUrl = `${selectedImageUri}?ar=${aspectRatio.toFixed(3)}`;
+          }
+        } else {
+          finalMediaUrl = `${selectedImageUri}?ar=${aspectRatio.toFixed(3)}`;
         }
         
         const result = await onSubmit(inputText, "photo", finalMediaUrl);
         if (result.error) throw result.error;
+
+        if (partner?.expo_push_token) {
+          await sendPushNotification(
+            partner.expo_push_token,
+            "New Memory Added 📸",
+            `${currentUserProfile?.display_name || 'Your partner'} added a new memory to your shared space.`
+          );
+        }
+
       } else if (selectedAudioUri) {
-        finalMediaUrl = selectedAudioUri;
+        if (spaceId) {
+          try {
+            const { readAsStringAsync } = await import("expo-file-system/legacy");
+            const base64Audio = await readAsStringAsync(selectedAudioUri, { encoding: 'base64' });
+            
+            const { decode } = await import("base64-arraybuffer");
+            const decodedBuffer = decode(base64Audio);
+            
+            const ext = selectedAudioUri.split('.').pop()?.toLowerCase() || 'm4a';
+            const fileName = `${spaceId}/${Date.now()}.${ext}`;
+            const contentType = `audio/${ext}`;
+            
+            const { supabase: sb } = await import("@/lib/supabase");
+            const { error: uploadError } = await sb.storage
+              .from('space_media')
+              .upload(fileName, decodedBuffer, { contentType });
+              
+            if (uploadError) {
+              console.error('[CreateNote] Audio upload error:', JSON.stringify(uploadError));
+              finalMediaUrl = selectedAudioUri; // Fallback to local
+            } else {
+              const { data: urlData } = sb.storage.from('space_media').getPublicUrl(fileName);
+              finalMediaUrl = urlData.publicUrl;
+              console.log('[CreateNote] Audio upload success:', finalMediaUrl);
+            }
+          } catch (err) {
+            console.error('[CreateNote] Audio upload exception:', err);
+            finalMediaUrl = selectedAudioUri;
+          }
+        } else {
+          finalMediaUrl = selectedAudioUri;
+        }
+
         const result = await onSubmit(inputText, "audio", finalMediaUrl);
         if (result.error) throw result.error;
+
+        if (partner?.expo_push_token) {
+          await sendPushNotification(
+            partner.expo_push_token,
+            "New Memory Added 🎙️",
+            `${currentUserProfile?.display_name || 'Your partner'} added a new voice note to your shared space.`
+          );
+        }
+
       } else {
         // Text only
         const result = await onSubmit(inputText, "text");
         if (result.error) throw result.error;
+        
+        if (partner?.expo_push_token) {
+          await sendPushNotification(
+            partner.expo_push_token,
+            "New Note Added 📝",
+            `${currentUserProfile?.display_name || 'Your partner'} added a new note to your shared space.`
+          );
+        }
       }
       resetAndClose();
     } catch (error: any) {

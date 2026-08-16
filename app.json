@@ -8,7 +8,7 @@
   "userInterfaceStyle": "automatic",
   "newArchEnabled": true,
   "splash": {
-    "image": "./assets/images/nook-splash.png",
+    "image": "./assets/images/nook-splash-v2.png",
     "resizeMode": "contain",
     "backgroundColor": "#FDFBF7"
   },

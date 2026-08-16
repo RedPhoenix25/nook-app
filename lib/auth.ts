@@ -40,10 +40,19 @@ export async function getCurrentUser(): Promise<User | null> {
   return user;
 }
 
+import { getDb, clearDatabase } from './database';
+
 /**
  * Signs the current user out and clears the persisted session.
  */
 export async function signOut(): Promise<{ error: string | null }> {
+  try {
+    const db = await getDb();
+    await clearDatabase(db);
+  } catch (err) {
+    console.error("Failed to clear local database on sign out", err);
+  }
+  
   const { error } = await supabase.auth.signOut();
   return { error: error?.message ?? null };
 }

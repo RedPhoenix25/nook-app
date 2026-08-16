@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { getCurrentUser } from "@/lib/auth";
 import { sendPushNotification } from "@/hooks/usePushNotifications";
@@ -32,6 +32,7 @@ export function useFeed() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [currentUserProfile, setCurrentUserProfile] = useState<Profile | null>(null);
+  const isInitialLoad = useRef(true);
 
   const { isOnline, lastSyncTime } = useSyncEngine();
 
@@ -47,9 +48,15 @@ export function useFeed() {
           setPartner(null);
           setNotes([]);
           setError("No active space found. You may need to create a new one.");
-          setLoading(false);
+          if (isInitialLoad.current) setLoading(false);
+          isInitialLoad.current = false;
         }
         return;
+      }
+
+      // Only show full-screen spinner on the very first load
+      if (isInitialLoad.current && isMounted) {
+        setLoading(true);
       }
 
       try {
@@ -89,12 +96,16 @@ export function useFeed() {
           is_pinned: Boolean(n.is_pinned)
         }));
         
+        console.log(`[useFeed] Fetched ${mappedNotes.length} notes from SQLite for space ${activeSpaceId}`);
         if (isMounted) setNotes(mappedNotes);
 
       } catch (err: any) {
         if (isMounted) setError(err.message);
       } finally {
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          isInitialLoad.current = false;
+          setLoading(false);
+        }
       }
     }
 
@@ -115,6 +126,7 @@ export function useFeed() {
     const db = await getDb();
     const newNoteId = generateUUID(); // Generate valid UUIDv4 locally
     
+    const now = new Date().toISOString();
     const newNote = {
       id: newNoteId,
       space_id: spaceId,
@@ -122,15 +134,16 @@ export function useFeed() {
       content,
       note_type: type,
       media_url: mediaUrl || null,
-      is_pinned: false,
-      created_at: new Date().toISOString(),
+      is_pinned: 0,
+      created_at: now,
+      updated_at: now,
     };
 
     try {
       // 1. Save to SQLite
       await db.runAsync(
-        `INSERT INTO notes (id, space_id, author_id, content, media_url, note_type, created_at, is_pinned) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        newNote.id, newNote.space_id, newNote.author_id, newNote.content, newNote.media_url, newNote.note_type, newNote.created_at, 0
+        `INSERT INTO notes (id, space_id, author_id, content, media_url, note_type, created_at, updated_at, is_pinned) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        newNote.id, newNote.space_id, newNote.author_id, newNote.content, newNote.media_url, newNote.note_type, newNote.created_at, newNote.updated_at, newNote.is_pinned
       );
 
       // 2. Queue mutation
@@ -158,8 +171,8 @@ export function useFeed() {
     
     try {
       await db.runAsync(
-        `UPDATE notes SET content = ?, media_url = ? WHERE id = ?`,
-        updatePayload.content, updatePayload.media_url, noteId
+        `UPDATE notes SET content = ?, media_url = ?, updated_at = ? WHERE id = ?`,
+        updatePayload.content, updatePayload.media_url, updatePayload.updated_at, noteId
       );
       
       await recordMutation(db, 'UPDATE', 'notes', noteId, updatePayload);
@@ -174,12 +187,12 @@ export function useFeed() {
   const togglePinNote = async (noteId: string, currentPinStatus: boolean) => {
     const db = await getDb();
     const newStatus = !currentPinStatus;
-    const updatePayload = { is_pinned: newStatus };
+    const updatePayload = { is_pinned: newStatus, updated_at: new Date().toISOString() };
     
     try {
       await db.runAsync(
-        `UPDATE notes SET is_pinned = ? WHERE id = ?`,
-        newStatus ? 1 : 0, noteId
+        `UPDATE notes SET is_pinned = ?, updated_at = ? WHERE id = ?`,
+        newStatus ? 1 : 0, updatePayload.updated_at, noteId
       );
       
       await recordMutation(db, 'UPDATE', 'notes', noteId, updatePayload);

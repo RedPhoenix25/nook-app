@@ -28,8 +28,10 @@ export type SpaceMeta = {
   id: string;
   name: string | null;
   partner?: {
+    id: string;
     display_name: string;
     avatar_url: string | null;
+    expo_push_token?: string | null;
   };
 };
 
@@ -78,7 +80,8 @@ function AuthGate({ session, isLoading, children }: { session: Session | null; i
             profiles (
               id,
               display_name,
-              avatar_url
+              avatar_url,
+              expo_push_token
             )
           )
         )
@@ -114,8 +117,10 @@ function AuthGate({ session, isLoading, children }: { session: Session | null; i
           id: space.id,
           name: space.name,
           partner: partnerProfile ? {
+            id: partnerMember.user_id,
             display_name: partnerProfile.display_name,
             avatar_url: partnerProfile.avatar_url,
+            expo_push_token: partnerProfile.expo_push_token,
           } : undefined
         };
       });
@@ -146,6 +151,27 @@ function AuthGate({ session, isLoading, children }: { session: Session | null; i
   // Check if user belongs to an active space when session changes
   useEffect(() => {
     refreshSpace();
+
+    if (session) {
+      const channel = supabase.channel('schema-db-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'space_members'
+          },
+          (payload) => {
+            // Re-fetch space details when a new member joins or leaves
+            refreshSpace();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
   }, [session]);
 
   // Handle routing once loading is complete

@@ -5,6 +5,7 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   TouchableOpacity,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -82,9 +83,13 @@ export default function VerifyScreen() {
         </TouchableOpacity>
 
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          className="flex-1 justify-center px-6"
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          className="flex-1"
         >
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 40 }}
+            keyboardShouldPersistTaps="handled"
+          >
           <Animated.View 
             entering={FadeInUp.duration(800).springify()}
             className="bg-white rounded-[32px] p-8 shadow-xl shadow-black/5 w-full items-center"
@@ -129,6 +134,7 @@ export default function VerifyScreen() {
               className="w-full"
             />
           </Animated.View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </View>

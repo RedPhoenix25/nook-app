@@ -73,7 +73,7 @@ export default function OnboardingHubScreen() {
         )}
 
         <KeyboardAvoidingView 
-          behavior={Platform.OS === "ios" ? "padding" : undefined} 
+          behavior={Platform.OS === "ios" ? "padding" : "height"} 
           className="flex-1"
         >
           <ScrollView 

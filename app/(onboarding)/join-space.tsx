@@ -5,6 +5,7 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   Alert,
   Image,
   TouchableOpacity
@@ -88,10 +89,13 @@ export default function JoinSpaceScreen() {
       <Header title="Join a Space" showBack={!hasSpace} />
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
       >
-        <View className="flex-1 px-6 pt-10 items-center">
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, alignItems: 'center', paddingHorizontal: 24, paddingTop: 40, paddingBottom: 40 }}
+          keyboardShouldPersistTaps="handled"
+        >
           <Image 
             source={require('@/assets/images/splash-icon.png')} 
             style={{ width: 64, height: 64, marginBottom: 24 }}
@@ -137,7 +141,7 @@ export default function JoinSpaceScreen() {
             disabled={code.join("").length !== 6}
             className="w-full"
           />
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

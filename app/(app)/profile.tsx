@@ -177,7 +177,7 @@ export default function ProfileScreen() {
     );
   }
 
-  const daysTogether = space?.created_at ? Math.max(1, Math.ceil((new Date().getTime() - new Date(space.created_at).getTime()) / (1000 * 60 * 60 * 24))) : 1;
+  const daysTogether = (partner && space?.created_at) ? Math.max(1, Math.ceil((new Date().getTime() - new Date(space.created_at).getTime()) / (1000 * 60 * 60 * 24))) : 0;
   const promptsShared = memories.filter(m => m.isUnlocked).length;
   const longestStreak = calculateLongestStreak(memories);
 
@@ -389,7 +389,7 @@ export default function ProfileScreen() {
 
       {/* Edit Space Name Modal */}
       <Modal visible={isEditingSpace} transparent animationType="fade">
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1">
           <View className="flex-1 bg-black/40 justify-center items-center px-6">
             <View className="bg-white rounded-3xl w-full p-6 shadow-sm border border-neutral-200/70">
               <Text className="font-serif text-charcoal text-2xl leading-snug mb-2">
@@ -427,7 +427,7 @@ export default function ProfileScreen() {
 
       {/* Edit Display Name Modal */}
       <Modal visible={isEditingName} transparent animationType="fade">
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1">
           <View className="flex-1 bg-black/40 justify-center items-center px-6">
             <View className="bg-white rounded-3xl w-full p-6 shadow-sm border border-neutral-200/70">
               <Text className="font-serif text-charcoal text-2xl leading-snug mb-2">

@@ -31,6 +31,7 @@ async function initSchema(database: SQLite.SQLiteDatabase) {
       media_url TEXT,
       note_type TEXT NOT NULL,
       created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
       is_pinned INTEGER DEFAULT 0
     );
 
@@ -40,7 +41,8 @@ async function initSchema(database: SQLite.SQLiteDatabase) {
       author_id TEXT,
       prompt_date TEXT NOT NULL,
       prompt_text TEXT NOT NULL,
-      created_at TEXT NOT NULL
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS prompts (
@@ -70,6 +72,22 @@ async function initSchema(database: SQLite.SQLiteDatabase) {
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
   `);
+
+  // Basic migration logic for CRDT-lite adding `updated_at`
+  const { user_version } = await database.getFirstAsync<{ user_version: number }>(`PRAGMA user_version`) || { user_version: 0 };
+  
+  if (user_version < 1) {
+    try {
+      await database.execAsync(`
+        ALTER TABLE notes ADD COLUMN updated_at TEXT DEFAULT '1970-01-01T00:00:00.000Z';
+        ALTER TABLE daily_prompts ADD COLUMN updated_at TEXT DEFAULT '1970-01-01T00:00:00.000Z';
+      `);
+    } catch (err) {
+      // Ignore if columns already exist
+      console.log('Columns might already exist:', err);
+    }
+    await database.execAsync(`PRAGMA user_version = 1`);
+  }
 }
 
 // Utility to record an offline mutation
@@ -99,4 +117,14 @@ export async function getPendingMutations(database: SQLite.SQLiteDatabase) {
   return await database.getAllAsync<any>(
     `SELECT * FROM offline_mutations ORDER BY created_at ASC`
   );
+}
+
+// Utility to wipe the database on sign out to prevent data bleed
+export async function clearDatabase(database: SQLite.SQLiteDatabase) {
+  await database.execAsync(`
+    DELETE FROM notes;
+    DELETE FROM daily_prompts;
+    DELETE FROM prompt_responses;
+    DELETE FROM offline_mutations;
+  `);
 }

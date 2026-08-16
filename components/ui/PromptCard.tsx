@@ -8,6 +8,7 @@ interface ResponseSlotProps {
   responseText: string | null;
   mediaUrl: string | null;
   isBlurred: boolean;
+  hasResponse: boolean;
   isCurrentUser: boolean;
 }
 
@@ -34,13 +35,25 @@ function ResponseSlot({ slot, onPress }: { slot: ResponseSlotProps; onPress: () 
       </Text>
 
       {slot.isBlurred ? (
-        /* Redacted / awaiting state */
-        <View className="bg-neutral-100 rounded-2xl p-4 min-h-[100px] items-center justify-center border border-neutral-200/60">
-          <View className="w-5 h-5 rounded-full bg-neutral-300 mb-2" />
-          <Text className="text-charcoal-muted text-xs text-center font-sans leading-relaxed">
-            Waiting for{"\n"}{slot.displayName}…
-          </Text>
-        </View>
+        slot.hasResponse ? (
+          /* Partner has answered but current user hasn't yet — show a locked teaser */
+          <View className="bg-terracotta/8 rounded-2xl p-4 min-h-[100px] items-center justify-center border border-terracotta/20">
+            <View className="w-7 h-7 rounded-full bg-terracotta/20 mb-2 items-center justify-center">
+              <Text style={{ fontSize: 14 }}>🔒</Text>
+            </View>
+            <Text className="text-terracotta text-xs text-center font-sans-medium leading-relaxed">
+              Answer to reveal{"\n"}{slot.displayName}'s response
+            </Text>
+          </View>
+        ) : (
+          /* Partner hasn't answered yet */
+          <View className="bg-neutral-100 rounded-2xl p-4 min-h-[100px] items-center justify-center border border-neutral-200/60">
+            <View className="w-5 h-5 rounded-full bg-neutral-300 mb-2" />
+            <Text className="text-charcoal-muted text-xs text-center font-sans leading-relaxed">
+              Waiting for{"\n"}{slot.displayName}…
+            </Text>
+          </View>
+        )
       ) : slot.responseText ? (
         /* Revealed response */
         <View className="bg-parchment rounded-2xl p-4 min-h-[100px] border border-neutral-200/60">

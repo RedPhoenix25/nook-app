@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { getCurrentUser } from "@/lib/auth";
+import { sendPushNotification } from "@/hooks/usePushNotifications";
 import type { Profile } from "@/types/database.types";
 import { getDb, recordMutation } from "@/lib/database";
 import { useSyncEngine } from "@/hooks/useSyncEngine";
@@ -24,6 +25,7 @@ export type PromptSlot = {
   responseText: string | null;
   mediaUrl: string | null;
   isBlurred: boolean;
+  hasResponse: boolean; // true if a response exists in the DB, even if blurred
   isCurrentUser: boolean;
 };
 
@@ -46,11 +48,19 @@ export function useDailyPrompt(spaceId: string | null, partner: Profile | null, 
   const [mainPromptItem, setMainPromptItem] = useState<PromptItem | null>(null);
   const [additionalPromptItems, setAdditionalPromptItems] = useState<PromptItem[]>([]);
   const { lastSyncTime } = useSyncEngine();
+  const isInitialLoad = useRef(true);
+
+  // Use stable primitive IDs to avoid re-renders when object references change
+  const partnerId = partner?.id ?? null;
+  const currentUserId = currentUserProfile?.id ?? null;
 
   const fetchPromptData = useCallback(async () => {
     if (!spaceId) return;
     try {
-      setLoading(true);
+      // Only show the full-screen spinner on the very first load
+      if (isInitialLoad.current) {
+        setLoading(true);
+      }
       const user = await getCurrentUser();
       if (!user) return;
 
@@ -133,6 +143,7 @@ export function useDailyPrompt(spaceId: string | null, partner: Profile | null, 
             responseText: myResponse?.response_text || null,
             mediaUrl: myResponse?.media_url || null,
             isBlurred: false,
+            hasResponse: !!myResponse,
             isCurrentUser: true,
           },
           partnerSlot: {
@@ -140,6 +151,7 @@ export function useDailyPrompt(spaceId: string | null, partner: Profile | null, 
             responseText: partnerResponse?.response_text || null,
             mediaUrl: partnerResponse?.media_url || null,
             isBlurred: partnerIsBlurred,
+            hasResponse: !!partnerResponse,
             isCurrentUser: false,
           }
         };
@@ -156,9 +168,10 @@ export function useDailyPrompt(spaceId: string | null, partner: Profile | null, 
     } catch (error) {
       console.error("Error in useDailyPrompt:", error);
     } finally {
+      isInitialLoad.current = false;
       setLoading(false);
     }
-  }, [spaceId, partner, currentUserProfile, lastSyncTime]);
+  }, [spaceId, partnerId, currentUserId, lastSyncTime]);
 
   const submitResponse = async (promptId: string, responseText: string) => {
     if (!spaceId) return { error: new Error("Space ID is missing") };
@@ -184,6 +197,15 @@ export function useDailyPrompt(spaceId: string | null, partner: Profile | null, 
       
       await recordMutation(db, 'INSERT', 'prompt_responses', newResponse.id, newResponse);
       
+      // Send nudge push notification to partner
+      if (partner?.expo_push_token) {
+        await sendPushNotification(
+          partner.expo_push_token,
+          "Prompt Answered! ✍️",
+          `${currentUserProfile?.display_name || 'Your partner'} just answered today's prompt. Share yours to unlock it.`
+        );
+      }
+
       // Update UI optimistically
       fetchPromptData();
       return { data: newResponse, error: null };
@@ -192,9 +214,51 @@ export function useDailyPrompt(spaceId: string | null, partner: Profile | null, 
     }
   };
 
+  const updateResponse = async (promptId: string, responseText: string) => {
+    if (!spaceId) return { error: new Error("Space ID is missing") };
+    const user = await getCurrentUser();
+    if (!user) return { error: new Error("Not authenticated") };
+
+    const db = await getDb();
+    
+    // First, find the existing response ID to update
+    const existing = await db.getFirstAsync<any>(
+      `SELECT id, created_at FROM prompt_responses WHERE prompt_id = ? AND user_id = ?`,
+      promptId, user.id
+    );
+    
+    if (!existing) {
+      return submitResponse(promptId, responseText);
+    }
+
+    const updatedResponse = {
+      id: existing.id,
+      prompt_id: promptId,
+      space_id: spaceId,
+      user_id: user.id,
+      response_text: responseText,
+      created_at: existing.created_at,
+      updated_at: new Date().toISOString()
+    };
+
+    try {
+      await db.runAsync(
+        `UPDATE prompt_responses SET response_text = ?, updated_at = ? WHERE id = ?`,
+        updatedResponse.response_text, updatedResponse.updated_at, updatedResponse.id
+      );
+      
+      await recordMutation(db, 'UPDATE', 'prompt_responses', updatedResponse.id, updatedResponse);
+      
+      fetchPromptData();
+      return { data: updatedResponse, error: null };
+    } catch (err) {
+      return { data: null, error: err };
+    }
+  };
+
   useEffect(() => {
     fetchPromptData();
-  }, [spaceId, partner, currentUserProfile, lastSyncTime]); // Reload from local db when sync completes
+  }, [spaceId, partnerId, currentUserId, lastSyncTime]); // Reload from local db when sync completes
 
   return {
     loading,
@@ -202,5 +266,6 @@ export function useDailyPrompt(spaceId: string | null, partner: Profile | null, 
     additionalPromptItems,
     refreshPrompt: fetchPromptData,
     submitResponse,
+    updateResponse,
   };
 }

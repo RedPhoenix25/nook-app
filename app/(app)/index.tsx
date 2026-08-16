@@ -52,9 +52,34 @@ export default function FeedScreen() {
 
   const [switcherVisible, setSwitcherVisible] = useState(false);
 
-  // Split notes into two columns for masonry layout
-  const leftCol = notes.filter((_, i) => i % 2 === 0);
-  const rightCol = notes.filter((_, i) => i % 2 !== 0);
+  // Split notes into two columns using a smarter height estimation layout
+  const leftCol: Note[] = [];
+  const rightCol: Note[] = [];
+  let leftHeight = 0;
+  let rightHeight = 0;
+
+  notes.forEach((note) => {
+    let estimatedHeight = 100; // Base padding/margin height
+    
+    if (note.note_type === "photo" && note.media_url) {
+      const match = note.media_url.match(/\?ar=([\d.]+)/);
+      const ar = match && match[1] ? parseFloat(match[1]) : 1;
+      estimatedHeight += (1 / ar) * 160; // Estimate image height (roughly 160px base width)
+    } else if (note.note_type === "audio") {
+      estimatedHeight += 70; // Audio player fixed height
+    } else {
+      // Text note
+      estimatedHeight += (note.content?.length || 0) * 0.6; // Roughly 0.6 units per char for text wrapping
+    }
+
+    if (leftHeight <= rightHeight) {
+      leftCol.push(note);
+      leftHeight += estimatedHeight;
+    } else {
+      rightCol.push(note);
+      rightHeight += estimatedHeight;
+    }
+  });
 
   const handleCreateNote = async (
     content: string,
@@ -66,7 +91,7 @@ export default function FeedScreen() {
   };
 
   const renderNote = (item: Note) => {
-    const isMe = item.author_id !== partner?.id;
+    const isMe = item.author_id === currentUserProfile?.id;
     const authorName = isMe ? "You" : partner?.display_name || "Partner";
 
     if (item.note_type === "photo" && item.media_url) {
@@ -82,7 +107,7 @@ export default function FeedScreen() {
           onLongPress={() => setLongPressedNote(item)}
           delayLongPress={350}
         >
-          {item.is_pinned && (
+          {!!item.is_pinned && (
             <View className="absolute -top-3 -right-3 z-10 w-11 h-11 bg-white rounded-full items-center justify-center shadow-sm border border-neutral-100">
               <PushPin size={18} color="#E06D53" weight="fill" />
             </View>
@@ -107,7 +132,7 @@ export default function FeedScreen() {
           onLongPress={() => setLongPressedNote(item)}
           delayLongPress={350}
         >
-          {item.is_pinned && (
+          {!!item.is_pinned && (
             <View className="absolute -top-3 -right-3 z-10 w-11 h-11 bg-white rounded-full items-center justify-center shadow-sm border border-neutral-100">
               <PushPin size={18} color="#E06D53" weight="fill" />
             </View>
@@ -150,7 +175,7 @@ export default function FeedScreen() {
         onLongPress={() => setLongPressedNote(item)}
         delayLongPress={350}
         >
-          {item.is_pinned && (
+          {!!item.is_pinned && (
             <View className="absolute -top-3 -right-3 z-10 w-11 h-11 bg-white rounded-full items-center justify-center shadow-sm border border-neutral-100">
               <PushPin size={18} color="#E06D53" weight="fill" />
             </View>
@@ -217,10 +242,10 @@ export default function FeedScreen() {
               onPress={() => setSwitcherVisible(true)}
               className="flex-row items-center mb-2"
             >
-              <Text className="font-serif text-charcoal text-4xl tracking-tight">
+              <Text className="font-serif text-charcoal text-4xl tracking-tight flex-shrink">
                 {greeting}{currentUserProfile?.display_name ? `, ${currentUserProfile.display_name}` : ''}.
               </Text>
-              <View className="ml-2 mt-1.5">
+              <View className="ml-2 mt-1.5 flex-shrink-0">
                 <CaretDown size={28} color="#E06D53" weight="bold" />
               </View>
             </TouchableOpacity>
@@ -354,6 +379,15 @@ export default function FeedScreen() {
       <SpaceSwitcherModal 
         visible={switcherVisible} 
         onClose={() => setSwitcherVisible(false)} 
+      />
+
+      <CreateNoteModal
+        visible={isCreateModalVisible}
+        onClose={() => setIsCreateModalVisible(false)}
+        spaceId={spaceId}
+        onSubmit={addNote}
+        partner={partner}
+        currentUserProfile={currentUserProfile}
       />
 
       {/* Expanded Note Modal */}

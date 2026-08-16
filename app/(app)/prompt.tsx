@@ -38,7 +38,8 @@ export default function PromptScreen() {
   const [deletePromptId, setDeletePromptId] = useState<string | null>(null);
 
   const { spaceId, currentUserProfile, partner } = useFeed();
-  const { mainPromptItem, additionalPromptItems, loading, refreshPrompt } = useDailyPrompt(spaceId, partner, currentUserProfile);
+  const { mainPromptItem, additionalPromptItems, loading, refreshPrompt, submitResponse, updateResponse } = useDailyPrompt(spaceId, partner, currentUserProfile);
+
   const { memories } = useMemories();
 
   // Completed memories (Streak / Total Shared)
@@ -120,18 +121,10 @@ export default function PromptScreen() {
     let errorToHandle = null;
 
     if (isEditing) {
-      const { error } = await supabase.from("prompt_responses")
-        .update({ response_text: text })
-        .eq('prompt_id', activePromptId)
-        .eq('user_id', currentUserProfile.id);
+      const { error } = await updateResponse(activePromptId, text);
       errorToHandle = error;
     } else {
-      const { error } = await supabase.from("prompt_responses").insert({
-        space_id: spaceId,
-        user_id: currentUserProfile.id,
-        prompt_id: activePromptId,
-        response_text: text,
-      });
+      const { error } = await submitResponse(activePromptId, text);
       errorToHandle = error;
     }
 
@@ -252,7 +245,7 @@ export default function PromptScreen() {
       </View>
       
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
         keyboardVerticalOffset={20}
       >
@@ -390,7 +383,7 @@ export default function PromptScreen() {
             </TouchableOpacity>
           </View>
           
-          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1">
             <ScrollView className="flex-1 px-6 pt-6" contentContainerStyle={{ paddingBottom: 60 }}>
               <Text className="font-serif text-charcoal text-2xl leading-snug mb-8">
                 {activePromptId === mainPromptItem?.prompt.id 
@@ -446,8 +439,8 @@ export default function PromptScreen() {
             </TouchableOpacity>
           </View>
           
-          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
-            <View className="flex-1 px-6 pt-6">
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1">
+            <ScrollView className="flex-1 px-6 pt-6" contentContainerStyle={{ paddingBottom: 60 }} keyboardShouldPersistTaps="handled">
               <TextInput
                 value={newQuestionText}
                 onChangeText={setNewQuestionText}
@@ -474,7 +467,7 @@ export default function PromptScreen() {
                   </Text>
                 )}
               </TouchableOpacity>
-            </View>
+            </ScrollView>
           </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>

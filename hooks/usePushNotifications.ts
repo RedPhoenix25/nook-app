@@ -24,6 +24,9 @@ export function usePushNotifications(userId: string | undefined) {
       }
     });
 
+    scheduleDailyReminder();
+
+
   }, [userId]);
 
   return expoPushToken;
@@ -100,5 +103,35 @@ export async function sendPushNotification(expoPushToken: string | null | undefi
     });
   } catch (error) {
     console.error("Error sending push:", error);
+  }
+}
+
+export async function scheduleDailyReminder() {
+  if (Platform.OS === 'web' || isExpoGo) return;
+  
+  try {
+    const Notifications = await import('expo-notifications');
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status !== 'granted') return;
+
+    // Cancel all existing scheduled notifications to avoid duplicates
+    await Notifications.cancelAllScheduledNotificationsAsync();
+
+    // Schedule the new daily reminder for 9:00 AM
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Good morning! ☀️",
+        body: "Your daily prompt is ready. Share a moment with your partner.",
+        sound: true,
+      },
+      trigger: {
+        hour: 9,
+        minute: 0,
+        repeats: true,
+      },
+    });
+    console.log("[PushNotifications] Scheduled daily morning reminder for 9:00 AM");
+  } catch (err) {
+    console.log("Error scheduling daily reminder:", err);
   }
 }
