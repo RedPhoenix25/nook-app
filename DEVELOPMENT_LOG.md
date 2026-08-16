@@ -43,9 +43,13 @@ This file serves as the central source of truth for the project's development pr
 - **UI Spacing & Alignment**: Tightened up vertical spacing in the Daily and Memories tabs and successfully moved the "Archived" stat below the header for a cleaner aesthetic.
 
 ## Recently Accomplished
+- **Splash Screen & Logo Polish**: 
+  - Generated a fully customized, high-resolution splash screen matching the exact Nook brand aesthetic (Warm Cream background, Sage/Terracotta decorative circles, clean borderless logo).
+  - Bypassed Chromium local file restrictions by embedding the logo via base64 for reliable generation.
+  - Audited all screens (`sign-in.tsx`, `index.tsx`, `join-space.tsx`, `create-space.tsx`, `AppLockScreen.tsx`) to remove artificial white boundary containers from the logo, standardizing the pure borderless aesthetic globally.
+- **EAS Production Readiness**: Validated `app.json` configuration and successfully prepared the project for EAS cloud building (`eas build`).
 - **Auth Flow Redesign**: Completely overhauled the `sign-in.tsx` and `verify.tsx` pages. Implemented decorative blurred bubble backgrounds, glassy card layouts for inputs, `react-native-reanimated` entrance animations, and an auto-submitting OTP mechanism that fires as soon as the 6th digit is typed.
 - **Global UI/UX Audit Pass**: Audited the entire application to enforce minimum `44x44px` touch targets for all interactive elements (buttons, icons, back arrows) and standardized padding to align with the 8pt grid system.
-- **Onboarding Navigation Flow**: Added "Cancel" buttons to Onboarding screens, allowing users to exit the flow and return to their active space.
 - **Leave Space vs Delete Space Architecture**: Clarified the UX difference between switching, leaving, and deleting spaces. Leave Space removes the user from `space_members`, hiding it from their view but preserving it for their partner.
 
 ### Date: 2026-08-10

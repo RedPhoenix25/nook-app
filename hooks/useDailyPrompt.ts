@@ -43,6 +43,9 @@ const FALLBACK_PROMPTS = [
   "What's a goal you want us to achieve together this year?",
 ];
 
+// Module-level lock to prevent race conditions when generating a new daily prompt
+let generatingPromptPromise: Promise<void> | null = null;
+
 export function useDailyPrompt(spaceId: string | null, partner: Profile | null, currentUserProfile: Profile | null) {
   const [loading, setLoading] = useState(true);
   const [mainPromptItem, setMainPromptItem] = useState<PromptItem | null>(null);
@@ -64,7 +67,8 @@ export function useDailyPrompt(spaceId: string | null, partner: Profile | null, 
       const user = await getCurrentUser();
       if (!user) return;
 
-      const today = new Date().toISOString().split('T')[0];
+      const now = new Date();
+      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       const db = await getDb();
 
       // Fetch all prompts for today from SQLite
@@ -75,45 +79,65 @@ export function useDailyPrompt(spaceId: string | null, partner: Profile | null, 
 
       // If no prompts exist (even offline), generate a new prompt locally
       if (prompts.length === 0) {
-        // Fetch all previously asked prompts in this space
-        const pastPrompts = await db.getAllAsync<any>(
-          `SELECT prompt_text FROM daily_prompts WHERE space_id = ?`,
-          spaceId
-        );
-        const usedTexts = new Set(pastPrompts.map(p => p.prompt_text));
+        if (generatingPromptPromise) {
+          // Another call is already generating the prompt. Wait for it, then re-query.
+          await generatingPromptPromise;
+          prompts = await db.getAllAsync<any>(
+            `SELECT * FROM daily_prompts WHERE prompt_date = ? AND (space_id = ? OR space_id IS NULL) ORDER BY created_at ASC`,
+            today, spaceId
+          );
+        } else {
+          // Take the lock
+          generatingPromptPromise = (async () => {
+            // Fetch all previously asked prompts in this space
+            const pastPrompts = await db.getAllAsync<any>(
+              `SELECT prompt_text FROM daily_prompts WHERE space_id = ?`,
+              spaceId
+            );
+            const usedTexts = new Set(pastPrompts.map(p => p.prompt_text));
 
-        // Fetch the prompt bank
-        const promptBank = await db.getAllAsync<any>(
-          `SELECT question FROM prompts WHERE is_active = 1`
-        );
-        
-        // Filter out used ones
-        let availablePrompts = promptBank.filter(p => !usedTexts.has(p.question));
+            // Fetch the prompt bank
+            const promptBank = await db.getAllAsync<any>(
+              `SELECT question FROM prompts WHERE is_active = 1`
+            );
+            
+            // Filter out used ones
+            let availablePrompts = promptBank.filter(p => !usedTexts.has(p.question));
 
-        // If we exhausted all prompts, recycle the whole bank (or fallback)
-        if (availablePrompts.length === 0) {
-          availablePrompts = promptBank.length > 0 ? promptBank : FALLBACK_PROMPTS.map(text => ({ question: text }));
+            // If we exhausted all prompts, recycle the whole bank (or fallback)
+            if (availablePrompts.length === 0) {
+              availablePrompts = promptBank.length > 0 ? promptBank : FALLBACK_PROMPTS.map(text => ({ question: text }));
+            }
+
+            const randomPrompt = availablePrompts[Math.floor(Math.random() * availablePrompts.length)];
+            const randomText = randomPrompt.question || randomPrompt;
+
+            const newPrompt = {
+              id: generateUUID(),
+              space_id: spaceId,
+              author_id: user.id, // Must be a valid UUID for Supabase
+              prompt_date: today,
+              prompt_text: randomText,
+              created_at: new Date().toISOString()
+            };
+
+            await db.runAsync(
+              `INSERT INTO daily_prompts (id, space_id, author_id, prompt_date, prompt_text, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+              newPrompt.id, newPrompt.space_id, newPrompt.author_id, newPrompt.prompt_date, newPrompt.prompt_text, newPrompt.created_at
+            );
+            
+            await recordMutation(db, 'INSERT', 'daily_prompts', newPrompt.id, newPrompt);
+          })();
+
+          await generatingPromptPromise;
+          generatingPromptPromise = null;
+          
+          // Re-query to get the newly inserted prompt safely
+          prompts = await db.getAllAsync<any>(
+            `SELECT * FROM daily_prompts WHERE prompt_date = ? AND (space_id = ? OR space_id IS NULL) ORDER BY created_at ASC`,
+            today, spaceId
+          );
         }
-
-        const randomPrompt = availablePrompts[Math.floor(Math.random() * availablePrompts.length)];
-        const randomText = randomPrompt.question || randomPrompt;
-
-        const newPrompt = {
-          id: generateUUID(),
-          space_id: spaceId,
-          author_id: user.id, // Must be a valid UUID for Supabase
-          prompt_date: today,
-          prompt_text: randomText,
-          created_at: new Date().toISOString()
-        };
-
-        await db.runAsync(
-          `INSERT INTO daily_prompts (id, space_id, author_id, prompt_date, prompt_text, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
-          newPrompt.id, newPrompt.space_id, newPrompt.author_id, newPrompt.prompt_date, newPrompt.prompt_text, newPrompt.created_at
-        );
-        
-        await recordMutation(db, 'INSERT', 'daily_prompts', newPrompt.id, newPrompt);
-        prompts = [newPrompt];
       }
 
       // Fetch responses for these prompts

@@ -485,11 +485,9 @@ export default function PromptScreen() {
               Extra Question
             </Text>
             <View className="flex-row items-center gap-4">
-              {expandedPromptItem?.prompt.author_id === currentUserProfile?.id && (
-                <TouchableOpacity onPress={() => handleDeleteQuestion(expandedPromptItem.prompt.id)} className="min-h-[44px] justify-center px-2">
-                  <Text className="text-red-500 font-sans-semibold text-base">Delete</Text>
-                </TouchableOpacity>
-              )}
+              <TouchableOpacity onPress={() => handleDeleteQuestion(expandedPromptItem.prompt.id)} className="min-h-[44px] justify-center px-2">
+                <Text className="text-red-500 font-sans-semibold text-base">Delete</Text>
+              </TouchableOpacity>
               <TouchableOpacity onPress={() => setExpandedPromptItem(null)} className="min-h-[44px] justify-center px-2 -mr-2">
                 <Text className="text-charcoal font-sans-semibold text-base">Close</Text>
               </TouchableOpacity>

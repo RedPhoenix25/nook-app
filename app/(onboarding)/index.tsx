@@ -87,7 +87,7 @@ export default function OnboardingHubScreen() {
                 entering={FadeInDown.duration(1000).springify()}
                 className="items-center w-full mb-10"
               >
-                <View className="shadow-lg shadow-black/10 rounded-[32px] mb-8 bg-white p-2">
+                <View className="shadow-lg shadow-black/10 rounded-[24px] mb-8">
                   <Image 
                     source={require('@/assets/images/splash-icon.png')} 
                     style={{ width: 100, height: 100 }}
