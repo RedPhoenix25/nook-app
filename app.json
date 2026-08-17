@@ -22,7 +22,13 @@
       "backgroundColor": "#FDFBF7"
     },
     "package": "com.nook.app",
-    "edgeToEdgeEnabled": true
+    "edgeToEdgeEnabled": true,
+    "permissions": [
+      "android.permission.RECORD_AUDIO",
+      "android.permission.MODIFY_AUDIO_SETTINGS",
+      "android.permission.FOREGROUND_SERVICE",
+      "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+    ]
   },
   "web": {
     "bundler": "metro",
@@ -44,5 +50,11 @@
   ],
   "experiments": {
     "typedRoutes": false
+  },
+  "extra": {
+    "router": {},
+    "eas": {
+      "projectId": "d1c912ab-d98a-4f92-9097-824708e63c08"
+    }
   }
 }
