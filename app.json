@@ -6,7 +6,7 @@
   "icon": "./assets/images/icon.png",
   "scheme": "nook",
   "userInterfaceStyle": "automatic",
-  "newArchEnabled": true,
+  "newArchEnabled": false,
   "splash": {
     "image": "./assets/images/splash-icon.png",
     "resizeMode": "contain",
@@ -22,7 +22,6 @@
       "backgroundColor": "#FDFBF7"
     },
     "package": "com.nook.app",
-    "edgeToEdgeEnabled": true,
     "permissions": [
       "android.permission.RECORD_AUDIO",
       "android.permission.MODIFY_AUDIO_SETTINGS",
