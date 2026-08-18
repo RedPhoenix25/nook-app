@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
-import { BlurView } from 'expo-blur';
 import { Button } from './Button';
 import { Lock } from 'phosphor-react-native';
 
@@ -20,7 +19,7 @@ export function AppLockScreen({ onUnlock }: AppLockScreenProps) {
 
   return (
     <View style={StyleSheet.absoluteFill} className="z-[999] bg-cream/95 items-center justify-center">
-      <BlurView intensity={90} tint="light" style={StyleSheet.absoluteFill} />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(253,251,247,0.97)' }]} />
       
       <View className="items-center z-10 px-6 w-full">
         <View className="mb-12 items-center">
