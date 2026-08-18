@@ -1,7 +1,7 @@
 import "../global.css";
 import React, { useEffect, useState } from "react";
 import { Stack, useRouter, useSegments } from "expo-router";
-import { View, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator, Text, ScrollView } from "react-native";
 import {
   useFonts,
   DMSerifDisplay_400Regular,
@@ -23,6 +23,36 @@ import { SyncProvider } from "@/hooks/useSyncEngine";
 SplashScreen.preventAutoHideAsync();
 
 import * as SecureStore from 'expo-secure-store';
+
+// Global error boundary — catches any JS crash and shows it on screen
+// instead of silently closing the app. Remove once stable.
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <View style={{ flex: 1, backgroundColor: '#FDFBF7', justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+          <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#E06D53', marginBottom: 12 }}>App Error</Text>
+          <ScrollView style={{ maxHeight: 400 }}>
+            <Text style={{ fontSize: 13, color: '#2C2C2C', fontFamily: 'monospace' }}>
+              {this.state.error?.message}{"\n\n"}{this.state.error?.stack}
+            </Text>
+          </ScrollView>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export type SpaceMeta = {
   id: string;
@@ -215,20 +245,6 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    // Guard against placeholder/missing Supabase credentials
-    const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? "";
-    const isPlaceholder =
-      !supabaseUrl ||
-      supabaseUrl === "https://your-project-ref.supabase.co" ||
-      supabaseUrl.includes("your-project-ref");
-
-    if (isPlaceholder) {
-      // Skip network call — just go to sign-in as unauthenticated
-      setSession(null);
-      setIsLoading(false);
-      return;
-    }
-
     // Fetch initial session with a timeout fallback
     const timeout = setTimeout(() => {
       setSession(null);
@@ -273,29 +289,31 @@ export default function RootLayout() {
   }
 
   return (
-    <SafeAreaProvider>
-      <StatusBar style="dark" backgroundColor="#FDFBF7" />
-      <AppLockProvider>
-        <AuthGate session={session} isLoading={isLoading}>
-          <AppLockContext.Consumer>
-            {({ isLocked, unlock }) => (
-              <View className="flex-1">
-                <SyncProvider>
-                  <Stack screenOptions={{ headerShown: false }}>
-                    <Stack.Screen name="(auth)" />
-                    <Stack.Screen name="(onboarding)" />
-                    <Stack.Screen name="(app)" />
-                    <Stack.Screen name="+not-found" />
-                  </Stack>
-                  {isLocked && session && (
-                    <AppLockScreen onUnlock={unlock} />
-                  )}
-                </SyncProvider>
-              </View>
-            )}
-          </AppLockContext.Consumer>
-        </AuthGate>
-      </AppLockProvider>
-    </SafeAreaProvider>
+    <ErrorBoundary>
+      <SafeAreaProvider>
+        <StatusBar style="dark" backgroundColor="#FDFBF7" />
+        <AppLockProvider>
+          <AuthGate session={session} isLoading={isLoading}>
+            <AppLockContext.Consumer>
+              {({ isLocked, unlock }) => (
+                <View className="flex-1">
+                  <SyncProvider>
+                    <Stack screenOptions={{ headerShown: false }}>
+                      <Stack.Screen name="(auth)" />
+                      <Stack.Screen name="(onboarding)" />
+                      <Stack.Screen name="(app)" />
+                      <Stack.Screen name="+not-found" />
+                    </Stack>
+                    {isLocked && session && (
+                      <AppLockScreen onUnlock={unlock} />
+                    )}
+                  </SyncProvider>
+                </View>
+              )}
+            </AppLockContext.Consumer>
+          </AuthGate>
+        </AppLockProvider>
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 }
