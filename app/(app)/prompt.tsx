@@ -118,7 +118,7 @@ export default function PromptScreen() {
       if (additional) isEditing = !!additional.mySlot.responseText;
     }
 
-    let errorToHandle = null;
+    let errorToHandle: any = null;
 
     if (isEditing) {
       const { error } = await updateResponse(activePromptId, text);
@@ -136,7 +136,7 @@ export default function PromptScreen() {
         setIsTyping(false);
         refreshPrompt();
       } else {
-        Alert.alert("Error", errorToHandle.message);
+        Alert.alert("Error", errorToHandle.message || "Failed to submit response.");
       }
     } else {
       setInputText("");
@@ -163,6 +163,7 @@ export default function PromptScreen() {
     
     try {
       const db = await getDb();
+      const now = new Date().toISOString();
       const newPromptId = Math.random().toString(36).substring(2) + Date.now().toString(36);
       const newPrompt = {
         id: newPromptId,
@@ -170,12 +171,13 @@ export default function PromptScreen() {
         author_id: currentUserProfile.id,
         prompt_text: text,
         prompt_date: today,
-        created_at: new Date().toISOString()
+        created_at: now,
+        updated_at: now
       };
 
       await db.runAsync(
-        `INSERT INTO daily_prompts (id, space_id, author_id, prompt_text, prompt_date, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
-        newPrompt.id, newPrompt.space_id, newPrompt.author_id, newPrompt.prompt_text, newPrompt.prompt_date, newPrompt.created_at
+        `INSERT INTO daily_prompts (id, space_id, author_id, prompt_text, prompt_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        newPrompt.id, newPrompt.space_id, newPrompt.author_id, newPrompt.prompt_text, newPrompt.prompt_date, newPrompt.created_at, newPrompt.updated_at
       );
       
       await recordMutation(db, 'INSERT', 'daily_prompts', newPrompt.id, newPrompt);
@@ -259,9 +261,20 @@ export default function PromptScreen() {
             </View>
           </View>
 
-          {loading || !mainPromptItem ? (
+          {loading && !mainPromptItem ? (
             <View className="items-center justify-center py-20">
               <ActivityIndicator color="#E06D53" size="large" />
+            </View>
+          ) : !mainPromptItem ? (
+            <View className="items-center justify-center py-16 px-4">
+              <Text className="font-serif text-charcoal text-2xl text-center mb-2">No prompt loaded yet</Text>
+              <Text className="font-sans text-charcoal-muted text-center text-sm mb-6">Tap below to refresh today's prompt.</Text>
+              <TouchableOpacity
+                onPress={() => refreshPrompt()}
+                className="bg-terracotta px-6 py-3 rounded-full shadow-sm"
+              >
+                <Text className="text-white font-sans-semibold text-sm">Load Today's Prompt</Text>
+              </TouchableOpacity>
             </View>
           ) : (
             <View className="flex-1">

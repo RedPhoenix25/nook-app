@@ -284,48 +284,60 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       }
 
       // Pull Daily Prompts for all spaces + global prompts
-      // PostgREST doesn't support complex OR with IN cleanly in the JS client without `.or()`.
-      const { data: prompts } = await supabase
+      const { data: prompts, error: promptsError } = await supabase
         .from('daily_prompts')
-        .select('*')
-        .or(`space_id.in.(${spaceIds.join(',')}),space_id.is.null`);
+        .select('*');
         
-      if (prompts) {
+      if (promptsError) {
+        console.error('[SyncEngine] Error pulling daily_prompts:', promptsError);
+      } else if (prompts) {
+        console.log(`[SyncEngine] Pulled ${prompts.length} daily_prompts from cloud.`);
         for (const p of prompts) {
+          const createdAt = p.created_at || new Date().toISOString();
+          const updatedAt = (p as any).updated_at || createdAt;
           await db.runAsync(
-            `INSERT OR REPLACE INTO daily_prompts (id, space_id, author_id, prompt_date, prompt_text, created_at)
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            p.id, p.space_id, p.author_id, p.prompt_date, p.prompt_text, p.created_at
+            `INSERT OR REPLACE INTO daily_prompts (id, space_id, author_id, prompt_date, prompt_text, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            p.id, p.space_id || null, p.author_id || null, p.prompt_date, p.prompt_text, createdAt, updatedAt
           );
         }
       }
 
       // Pull Prompt Responses for all spaces
-      const { data: responses, error: responsesError } = await supabase.from('prompt_responses').select('*').in('space_id', spaceIds);
-      console.log(`[SyncEngine] Pulled ${responses?.length ?? 0} prompt_responses from cloud. Error: ${responsesError?.message ?? 'none'}`);
-      if (responses) {
+      const { data: responses, error: responsesError } = await supabase
+        .from('prompt_responses')
+        .select('*')
+        .in('space_id', spaceIds);
+
+      if (responsesError) {
+        console.error('[SyncEngine] Error pulling prompt_responses:', responsesError);
+      } else if (responses) {
+        console.log(`[SyncEngine] Pulled ${responses.length} prompt_responses from cloud.`);
         for (const pr of responses) {
-          // Note: Supabase responses use 'submitted_at' for 'created_at'.
+          const submittedAt = pr.submitted_at || (pr as any).created_at || new Date().toISOString();
+          const updatedAt = (pr as any).updated_at || submittedAt;
           await db.runAsync(
-            `INSERT INTO prompt_responses (id, prompt_id, space_id, user_id, response_text, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?)
+            `INSERT INTO prompt_responses (id, prompt_id, space_id, user_id, response_text, media_url, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
              ON CONFLICT(id) DO UPDATE SET
                response_text = excluded.response_text,
+               media_url = excluded.media_url,
                updated_at = excluded.updated_at
-             WHERE excluded.updated_at > prompt_responses.updated_at`,
-            pr.id, pr.prompt_id, pr.space_id, pr.user_id, pr.response_text, pr.submitted_at, pr.updated_at || pr.submitted_at
+             WHERE excluded.updated_at >= prompt_responses.updated_at`,
+            pr.id, pr.prompt_id, pr.space_id, pr.user_id, pr.response_text, pr.media_url || null, submittedAt, updatedAt
           );
         }
       }
 
       // Pull Prompt Bank (public.prompts)
-      const { data: promptBank } = await (supabase as any).from('prompts').select('*').eq('is_active', true);
+      const { data: promptBank, error: bankError } = await (supabase as any).from('prompts').select('*').eq('is_active', true);
       if (promptBank) {
+        console.log(`[SyncEngine] Pulled ${promptBank.length} question bank prompts from cloud.`);
         for (const p of promptBank) {
           await db.runAsync(
             `INSERT OR REPLACE INTO prompts (id, category, question, is_active, created_at)
              VALUES (?, ?, ?, ?, ?)`,
-            p.id, p.category, p.question, p.is_active ? 1 : 0, p.created_at
+            p.id, p.category, p.question, p.is_active ? 1 : 0, p.created_at || new Date().toISOString()
           );
         }
       }

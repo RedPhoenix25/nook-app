@@ -11,10 +11,13 @@ export default function MemoriesScreen() {
   const { memories, loading } = useMemories();
   const [selectedMemory, setSelectedMemory] = useState<any | null>(null);
 
-  // Only show memories where BOTH users have answered
-  const completedMemories = memories.filter(
-    (m) => m.myResponse && m.partnerResponse
+  // Show memories where at least one user has answered
+  const displayedMemories = memories.filter(
+    (m) => m.myResponse || m.partnerResponse
   );
+  const completedCount = memories.filter(
+    (m) => m.myResponse && m.partnerResponse
+  ).length;
 
   const renderModal = () => {
     if (!selectedMemory) return null;
@@ -24,6 +27,7 @@ export default function MemoriesScreen() {
       responseText: selectedMemory.myResponse?.response_text || null,
       mediaUrl: selectedMemory.myResponse?.media_url || null,
       isBlurred: false,
+      hasResponse: !!selectedMemory.myResponse,
       isCurrentUser: true,
     };
 
@@ -31,7 +35,8 @@ export default function MemoriesScreen() {
       displayName: "Partner",
       responseText: selectedMemory.partnerResponse?.response_text || null,
       mediaUrl: selectedMemory.partnerResponse?.media_url || null,
-      isBlurred: false,
+      isBlurred: !selectedMemory.isUnlocked,
+      hasResponse: !!selectedMemory.partnerResponse,
       isCurrentUser: false,
     };
 
@@ -57,7 +62,7 @@ export default function MemoriesScreen() {
               promptDate={selectedMemory.prompt.prompt_date}
               mySlot={mySlot}
               partnerSlot={partnerSlot}
-              hasResponded={true}
+              hasResponded={!!selectedMemory.myResponse}
               onRespond={() => {}}
             />
           </ScrollView>
@@ -78,7 +83,7 @@ export default function MemoriesScreen() {
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#E06D53" />
         </View>
-      ) : completedMemories.length === 0 ? (
+      ) : displayedMemories.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
           <Text className="font-sans text-charcoal-muted text-center text-base leading-relaxed">
             No memories yet. Answer Daily Prompts together to build your archive!
@@ -93,11 +98,11 @@ export default function MemoriesScreen() {
           <View className="mb-4 flex-row items-center">
             <View className="bg-terracotta/10 px-3 py-1.5 rounded-full border border-terracotta/20">
               <Text className="text-terracotta font-sans-semibold text-xs tracking-wide">
-                {completedMemories.length} Archived
+                {completedCount} Completed
               </Text>
             </View>
           </View>
-          {completedMemories.map((memory) => {
+          {displayedMemories.map((memory) => {
             const dateStr = new Date(memory.prompt.prompt_date).toLocaleDateString(undefined, { 
               month: 'short', 
               day: 'numeric', 
@@ -111,9 +116,20 @@ export default function MemoriesScreen() {
                 activeOpacity={0.8}
                 onPress={() => setSelectedMemory(memory)}
               >
-                <Text className="font-sans text-neutral-400 text-xs uppercase tracking-widest mb-2">
-                  {dateStr}
-                </Text>
+                <View className="flex-row justify-between items-center mb-2">
+                  <Text className="font-sans text-neutral-400 text-xs uppercase tracking-widest">
+                    {dateStr}
+                  </Text>
+                  {memory.isUnlocked ? (
+                    <View className="bg-sage/10 px-2 py-0.5 rounded-full">
+                      <Text className="text-[10px] font-sans-semibold text-[#4A7A48] uppercase tracking-wider">Unlocked</Text>
+                    </View>
+                  ) : (
+                    <View className="bg-terracotta/10 px-2 py-0.5 rounded-full">
+                      <Text className="text-[10px] font-sans-semibold text-terracotta uppercase tracking-wider">In Progress</Text>
+                    </View>
+                  )}
+                </View>
                 <Text className="font-serif text-charcoal text-xl leading-snug" numberOfLines={2}>
                   {memory.prompt.prompt_text}
                 </Text>

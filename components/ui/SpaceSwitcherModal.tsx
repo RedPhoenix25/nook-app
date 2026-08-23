@@ -20,7 +20,7 @@ export function SpaceSwitcherModal({ visible, onClose }: SpaceSwitcherModalProps
 
   const handleAddNew = () => {
     onClose();
-    router.push("/(onboarding)");
+    router.push("/(onboarding)" as any);
   };
 
   return (

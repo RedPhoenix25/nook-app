@@ -43,6 +43,8 @@ async function registerForPushNotificationsAsync() {
         shouldShowAlert: true,
         shouldPlaySound: true,
         shouldSetBadge: false,
+        shouldShowBanner: true,
+        shouldShowList: true,
       }),
     });
 
@@ -128,7 +130,7 @@ export async function scheduleDailyReminder() {
         hour: 9,
         minute: 0,
         repeats: true,
-      },
+      } as any,
     });
     console.log("[PushNotifications] Scheduled daily morning reminder for 9:00 AM");
   } catch (err) {

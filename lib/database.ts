@@ -7,7 +7,7 @@ export function getDb(): Promise<SQLite.SQLiteDatabase> {
   if (dbPromise) return dbPromise;
 
   dbPromise = (async () => {
-    const database = await SQLite.openDatabaseAsync('nook_v3.db');
+    const database = await SQLite.openDatabaseAsync('nook_v4.db');
     await initSchema(database);
     return database;
   })();
@@ -31,7 +31,7 @@ async function initSchema(database: SQLite.SQLiteDatabase) {
       media_url TEXT,
       note_type TEXT NOT NULL,
       created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL,
+      updated_at TEXT DEFAULT '1970-01-01T00:00:00.000Z',
       is_pinned INTEGER DEFAULT 0
     );
 
@@ -42,7 +42,7 @@ async function initSchema(database: SQLite.SQLiteDatabase) {
       prompt_date TEXT NOT NULL,
       prompt_text TEXT NOT NULL,
       created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL
+      updated_at TEXT DEFAULT '1970-01-01T00:00:00.000Z'
     );
 
     CREATE TABLE IF NOT EXISTS prompts (
@@ -59,8 +59,9 @@ async function initSchema(database: SQLite.SQLiteDatabase) {
       space_id TEXT NOT NULL,
       user_id TEXT NOT NULL,
       response_text TEXT,
+      media_url TEXT,
       created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL
+      updated_at TEXT DEFAULT '1970-01-01T00:00:00.000Z'
     );
 
     CREATE TABLE IF NOT EXISTS offline_mutations (
@@ -72,22 +73,6 @@ async function initSchema(database: SQLite.SQLiteDatabase) {
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
   `);
-
-  // Basic migration logic for CRDT-lite adding `updated_at`
-  const { user_version } = await database.getFirstAsync<{ user_version: number }>(`PRAGMA user_version`) || { user_version: 0 };
-  
-  if (user_version < 1) {
-    try {
-      await database.execAsync(`
-        ALTER TABLE notes ADD COLUMN updated_at TEXT DEFAULT '1970-01-01T00:00:00.000Z';
-        ALTER TABLE daily_prompts ADD COLUMN updated_at TEXT DEFAULT '1970-01-01T00:00:00.000Z';
-      `);
-    } catch (err) {
-      // Ignore if columns already exist
-      console.log('Columns might already exist:', err);
-    }
-    await database.execAsync(`PRAGMA user_version = 1`);
-  }
 }
 
 // Utility to record an offline mutation

@@ -1,0 +1,2255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#FDFBF7" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <title>Nook — User Guide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <style>
+        /* ── TOKENS ──────────────────────────────────────────── */
+        :root {
+            --cream: #FDFBF7;
+            --cream-dk: #F2EDE4;
+            --terra: #E06D53;
+            --terra-pale: #FDF0ED;
+            --terra-light: #F2B5A7;
+            --sage: #8BA888;
+            --sage-pale: #EDF4EC;
+            --sage-light: #C4D9C2;
+            --charcoal: #2C2C2C;
+            --muted: #6B6B6B;
+            --n100: #F5F5F5;
+            --n200: #E5E5E5;
+            --white: #FFFFFF;
+            --radius-card: 20px;
+            --radius-pill: 100px;
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        /* ── RESET ───────────────────────────────────────────── */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--cream);
+            color: var(--charcoal);
+            font-size: 15px;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            overscroll-behavior-y: none;
+        }
+
+        /* ── SCROLLABLE CONTAINER ────────────────────────────── */
+        .app {
+            max-width: 480px;
+            margin: 0 auto;
+            min-height: 100dvh;
+            position: relative;
+        }
+
+        /* ── STICKY TOP STATUS BAR ───────────────────────────── */
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(253, 251, 247, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+            padding: 12px 20px 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .top-bar-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--sage) 0%, var(--terra) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-family: 'Playfair Display', serif;
+            font-size: 16px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .top-bar-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 18px;
+            color: var(--charcoal);
+            flex: 1;
+        }
+
+        .top-bar-count {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--muted);
+            letter-spacing: 0.05em;
+        }
+
+        /* ── PROGRESS BAR ────────────────────────────────────── */
+        .progress-track {
+            height: 3px;
+            background: var(--n200);
+            position: sticky;
+            top: 55px;
+            z-index: 99;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--terra), var(--sage));
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        /* ── COVER ───────────────────────────────────────────── */
+        #cover {
+            min-height: 100dvh;
+            background: linear-gradient(160deg, var(--cream) 0%, var(--cream-dk) 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 60px 28px 120px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #cover::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            right: -60px;
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(138, 168, 136, 0.22) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        #cover::after {
+            content: '';
+            position: absolute;
+            bottom: 100px;
+            left: -40px;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(224, 109, 83, 0.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .cover-logo {
+            width: 96px;
+            height: 96px;
+            border-radius: 28px;
+            background: linear-gradient(135deg, var(--sage) 0%, var(--terra) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Playfair Display', serif;
+            font-size: 44px;
+            font-weight: 700;
+            color: white;
+            margin: 0 auto 28px;
+            box-shadow: 0 20px 48px rgba(224, 109, 83, 0.28);
+            position: relative;
+            z-index: 1;
+        }
+
+        .cover h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 60px;
+            font-weight: 700;
+            letter-spacing: -2px;
+            color: var(--charcoal);
+            line-height: 1;
+            margin-bottom: 6px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cover h1 span {
+            color: var(--terra);
+        }
+
+        .cover-tagline {
+            font-size: 16px;
+            color: var(--muted);
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cover-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            border: 1px solid var(--n200);
+            border-radius: var(--radius-pill);
+            padding: 10px 22px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--muted);
+            position: relative;
+            z-index: 1;
+            margin-bottom: 48px;
+        }
+
+        .cover-cta {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cover-cta-btn {
+            background: var(--terra);
+            color: white;
+            border: none;
+            border-radius: var(--radius-pill);
+            padding: 16px 40px;
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 10px 32px rgba(224, 109, 83, 0.35);
+            transition: transform 0.15s, box-shadow 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .cover-cta-btn:active {
+            transform: scale(0.97);
+            box-shadow: 0 6px 20px rgba(224, 109, 83, 0.3);
+        }
+
+        .cover-cta-hint {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        /* ── TABLE OF CONTENTS ────────────────────────────────── */
+        #toc {
+            padding: 28px 20px 32px;
+        }
+
+        .toc-heading {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            color: var(--charcoal);
+            margin-bottom: 4px;
+        }
+
+        .toc-sub {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 24px;
+        }
+
+        .toc-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .toc-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--n100);
+            text-decoration: none;
+            -webkit-tap-highlight-color: transparent;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+
+        .toc-row:active {
+            background: var(--n100);
+            border-radius: 12px;
+        }
+
+        .toc-row:last-child {
+            border-bottom: none;
+        }
+
+        .toc-num {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-pill);
+            background: var(--terra-pale);
+            border: 1px solid var(--terra-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--terra);
+            flex-shrink: 0;
+        }
+
+        .toc-text {
+            flex: 1;
+        }
+
+        .toc-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--charcoal);
+            margin-bottom: 2px;
+        }
+
+        .toc-desc {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+
+        .toc-arrow {
+            color: var(--n200);
+            font-size: 16px;
+        }
+
+        /* ── SECTION WRAPPER ────────────────────────────────── */
+        .section {
+            padding: 0 0 40px;
+        }
+
+        /* ── SECTION HERO BANNER ────────────────────────────── */
+        .section-hero {
+            padding: 32px 20px 28px;
+            background: var(--white);
+            border-bottom: 1px solid var(--n100);
+            margin-bottom: 4px;
+        }
+
+        .section-hero.terra-bg {
+            background: linear-gradient(160deg, var(--terra-pale) 0%, var(--white) 100%);
+        }
+
+        .section-hero.sage-bg {
+            background: linear-gradient(160deg, var(--sage-pale) 0%, var(--white) 100%);
+        }
+
+        .section-hero.dark-bg {
+            background: linear-gradient(160deg, #2C2C2C 0%, #3d3d3d 100%);
+        }
+
+        .section-hero.dark-bg .section-num,
+        .section-hero.dark-bg .section-title,
+        .section-hero.dark-bg .section-intro {
+            color: white;
+        }
+
+        .section-hero.dark-bg .section-intro {
+            opacity: 0.7;
+        }
+
+        .section-num {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--terra);
+            margin-bottom: 10px;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 34px;
+            font-weight: 700;
+            color: var(--charcoal);
+            letter-spacing: -0.5px;
+            line-height: 1.1;
+            margin-bottom: 10px;
+        }
+
+        .section-intro {
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        /* ── CARD ────────────────────────────────────────────── */
+        .card {
+            background: var(--white);
+            border: 1px solid var(--n200);
+            border-radius: var(--radius-card);
+            padding: 20px;
+            margin: 0 16px 12px;
+        }
+
+        .card.terra-l {
+            border-left: 4px solid var(--terra);
+        }
+
+        .card.sage-l {
+            border-left: 4px solid var(--sage);
+        }
+
+        .card.gold-l {
+            border-left: 4px solid #E8C547;
+        }
+
+        .card.red-l {
+            border-left: 4px solid #EF4444;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            margin-bottom: 10px;
+        }
+
+        .card-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .card-icon.terra {
+            background: var(--terra-pale);
+        }
+
+        .card-icon.sage {
+            background: var(--sage-pale);
+        }
+
+        .card-icon.gold {
+            background: #FFFBEE;
+        }
+
+        .card-icon.blue {
+            background: #EEF4FF;
+        }
+
+        .card-icon.red {
+            background: #FEF2F2;
+        }
+
+        .card-icon.dark {
+            background: rgba(44, 44, 44, 0.08);
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--charcoal);
+            margin-bottom: 2px;
+        }
+
+        .card-subtitle {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            text-transform: uppercase;
+        }
+
+        .card-body {
+            font-size: 14px;
+            color: #444;
+            line-height: 1.7;
+        }
+
+        /* ── TIP BOX ─────────────────────────────────────────── */
+        .tip {
+            margin: 0 16px 12px;
+            border-radius: 16px;
+            padding: 16px 18px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .tip.terra {
+            background: var(--terra-pale);
+            border: 1px solid var(--terra-light);
+        }
+
+        .tip.sage {
+            background: var(--sage-pale);
+            border: 1px solid var(--sage-light);
+        }
+
+        .tip.gold {
+            background: #FFFBEE;
+            border: 1px solid #F5E6A0;
+        }
+
+        .tip-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            padding-top: 1px;
+        }
+
+        .tip-body {
+            font-size: 13.5px;
+            color: var(--charcoal);
+            line-height: 1.65;
+        }
+
+        .tip-body strong {
+            font-weight: 700;
+        }
+
+        /* ── STEP LIST ───────────────────────────────────────── */
+        .step-list {
+            margin: 0 16px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .step-row {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--n100);
+        }
+
+        .step-row:last-child {
+            border-bottom: none;
+        }
+
+        .step-num {
+            min-width: 28px;
+            height: 28px;
+            border-radius: var(--radius-pill);
+            background: var(--terra);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .step-text {
+            flex: 1;
+            min-width: 0;
+            font-size: 14px;
+            color: #444;
+            line-height: 1.65;
+        }
+
+        /* ── FEATURE ROW ─────────────────────────────────────── */
+        .feature-row {
+            margin: 0 16px 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .feature-item {
+            background: var(--white);
+            border: 1px solid var(--n200);
+            border-radius: 16px;
+            padding: 16px 14px;
+        }
+
+        .feature-emoji {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .feature-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--charcoal);
+            margin-bottom: 4px;
+        }
+
+        .feature-desc {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        /* ── DIVIDER ─────────────────────────────────────────── */
+        .divider {
+            height: 1px;
+            background: var(--n100);
+            margin: 20px 16px;
+        }
+
+        /* ── SECTION LABEL ───────────────────────────────────── */
+        .sub-heading {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            color: var(--charcoal);
+            padding: 0 16px;
+            margin: 20px 0 12px;
+        }
+
+        /* ── UI MOCKUP ───────────────────────────────────────── */
+        .mockup {
+            margin: 0 16px 20px;
+            background: var(--cream);
+            border: 2px solid var(--n200);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        .mockup-bar {
+            background: white;
+            border-bottom: 1px solid var(--n100);
+            padding: 14px 16px 10px;
+        }
+
+        .mockup-bar-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            color: var(--charcoal);
+        }
+
+        .mockup-bar-sub {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .mockup-body {
+            padding: 16px;
+        }
+
+        /* ── NOTE CARD (mock) ────────────────────────────────── */
+        .m-note {
+            background: white;
+            border: 1px solid var(--n200);
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .m-author {
+            display: inline-block;
+            background: var(--terra-pale);
+            color: var(--terra);
+            border-radius: var(--radius-pill);
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            margin-bottom: 8px;
+        }
+
+        .m-author.sage {
+            background: var(--sage-pale);
+            color: #4A7A48;
+        }
+
+        .m-img {
+            width: 100%;
+            height: 90px;
+            background: linear-gradient(135deg, var(--sage-pale), var(--cream));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            margin-bottom: 8px;
+        }
+
+        .m-text {
+            color: var(--charcoal);
+            line-height: 1.5;
+        }
+
+        /* ── PROMPT CARD (mock) ──────────────────────────────── */
+        .m-prompt {
+            background: linear-gradient(160deg, var(--sage-pale), var(--cream));
+            border: 1px solid var(--sage-light);
+            border-radius: 18px;
+            padding: 18px;
+            margin: 0 16px 12px;
+        }
+
+        .m-prompt-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--sage);
+            margin-bottom: 8px;
+        }
+
+        .m-prompt-q {
+            font-family: 'Playfair Display', serif;
+            font-size: 16px;
+            color: var(--charcoal);
+            line-height: 1.4;
+            margin-bottom: 14px;
+        }
+
+        .m-slot {
+            background: white;
+            border: 1px solid var(--n200);
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+        }
+
+        .m-slot-label {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 4px;
+        }
+
+        .m-slot-text {
+            font-size: 12px;
+            color: var(--charcoal);
+            line-height: 1.5;
+        }
+
+        .m-slot.blurred .m-slot-text {
+            color: transparent;
+            text-shadow: 0 0 7px rgba(0, 0, 0, 0.35);
+            user-select: none;
+        }
+
+        /* ── TAB BAR (mock) ──────────────────────────────────── */
+        .m-tabs {
+            display: flex;
+            background: white;
+            border-top: 1px solid var(--n200);
+            padding: 10px 0 4px;
+        }
+
+        .m-tab {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .m-tab-icon {
+            font-size: 18px;
+        }
+
+        .m-tab-label {
+            font-size: 9px;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .m-tab.active .m-tab-label {
+            color: var(--terra);
+        }
+
+        /* ── FAB (mock) ──────────────────────────────────────── */
+        .m-fab {
+            width: 50px;
+            height: 50px;
+            background: var(--terra);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: white;
+            box-shadow: 0 6px 20px rgba(224, 109, 83, 0.4);
+            margin-left: auto;
+            margin-top: 8px;
+        }
+
+        /* ── STAT GRID ───────────────────────────────────────── */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 0 16px 16px;
+        }
+
+        .stat-box {
+            background: white;
+            border: 1px solid var(--n200);
+            border-radius: 16px;
+            padding: 14px 10px;
+            text-align: center;
+        }
+
+        .stat-n {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            color: var(--charcoal);
+        }
+
+        .stat-lbl {
+            font-size: 10px;
+            color: var(--muted);
+            margin-top: 2px;
+            font-weight: 500;
+        }
+
+        /* ── BADGE / TAG ─────────────────────────────────────── */
+        .badge {
+            display: inline-block;
+            background: var(--terra-pale);
+            color: var(--terra);
+            border: 1px solid var(--terra-light);
+            border-radius: var(--radius-pill);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 3px 10px;
+            vertical-align: middle;
+        }
+
+        .badge.sage {
+            background: var(--sage-pale);
+            color: #4A7A48;
+            border-color: var(--sage-light);
+        }
+
+        /* ── FLOW DIAGRAM ────────────────────────────────────── */
+        .flow {
+            margin: 0 16px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .flow-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px dashed var(--n200);
+        }
+
+        .flow-item:last-child {
+            border-bottom: none;
+        }
+
+        .flow-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--terra);
+            flex-shrink: 0;
+        }
+
+        .flow-dot.done {
+            background: var(--sage);
+        }
+
+        .flow-text {
+            font-size: 13.5px;
+            color: var(--charcoal);
+            font-weight: 500;
+        }
+
+        .flow-text span {
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--muted);
+            display: block;
+        }
+
+        /* ── INVITE CODE DISPLAY ─────────────────────────────── */
+        .invite-code-box {
+            margin: 0 16px 16px;
+            background: white;
+            border: 1px solid var(--n200);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .invite-code-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 12px;
+        }
+
+        .invite-code-val {
+            font-family: 'Playfair Display', serif;
+            font-size: 36px;
+            color: var(--terra);
+            letter-spacing: 0.22em;
+            background: var(--n100);
+            border: 1px solid var(--n200);
+            border-radius: 14px;
+            padding: 14px 20px;
+            margin-bottom: 16px;
+        }
+
+        .invite-code-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .invite-btn {
+            flex: 1;
+            background: var(--n100);
+            border: 1px solid var(--n200);
+            border-radius: var(--radius-pill);
+            padding: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--charcoal);
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .invite-btn.share {
+            flex: 0;
+            width: 44px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        /* ── APP LOCK MOCKUP ─────────────────────────────────── */
+        .lock-screen {
+            margin: 0 16px 16px;
+            background: linear-gradient(160deg, #2C2C2C 0%, #3d3d3d 100%);
+            border-radius: 20px;
+            padding: 36px 24px;
+            text-align: center;
+            color: white;
+        }
+
+        .lock-icon {
+            font-size: 56px;
+            margin-bottom: 16px;
+        }
+
+        .lock-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+
+        .lock-sub {
+            font-size: 13px;
+            opacity: 0.6;
+            margin-bottom: 28px;
+            line-height: 1.6;
+        }
+
+        .lock-btn {
+            background: var(--terra);
+            border-radius: var(--radius-pill);
+            padding: 14px 36px;
+            font-size: 14px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        /* ── GESTURE TABLE ───────────────────────────────────── */
+        .gesture-list {
+            margin: 0 16px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .gesture-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--n100);
+        }
+
+        .gesture-row:last-child {
+            border-bottom: none;
+        }
+
+        .gesture-icon {
+            width: 44px;
+            height: 44px;
+            background: white;
+            border: 1px solid var(--n200);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .gesture-title {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--charcoal);
+            margin-bottom: 2px;
+        }
+
+        .gesture-desc {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+
+        /* ── BOTTOM NAV DOTS (section progress) ──────────────── */
+        .bottom-nav {
+            position: fixed;
+            bottom: calc(24px + var(--safe-bottom));
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 200;
+            background: rgba(44, 44, 44, 0.88);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: var(--radius-pill);
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.35);
+            cursor: pointer;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .nav-dot.active {
+            width: 22px;
+            border-radius: 3px;
+            background: var(--terra);
+        }
+
+        .nav-prev,
+        .nav-next {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 15px;
+            cursor: pointer;
+            padding: 4px;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        .nav-next {
+            color: white;
+        }
+
+        /* ── BACK TO TOP ─────────────────────────────────────── */
+        .back-top {
+            display: block;
+            text-align: center;
+            padding: 20px;
+            font-size: 13px;
+            color: var(--terra);
+            font-weight: 600;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ── BACK COVER ──────────────────────────────────────── */
+        #back-cover {
+            background: linear-gradient(160deg, var(--charcoal) 0%, #3d3d3d 100%);
+            padding: 60px 28px 120px;
+            text-align: center;
+            color: white;
+        }
+
+        #back-cover .cover-logo {
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        #back-cover h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+
+        #back-cover h2 span {
+            color: var(--terra);
+        }
+
+        #back-cover p {
+            font-size: 14px;
+            opacity: 0.6;
+            line-height: 1.8;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        /* ── UTILITY ─────────────────────────────────────────── */
+        strong {
+            font-weight: 700;
+        }
+
+        em {
+            font-style: italic;
+        }
+
+        code {
+            background: var(--n100);
+            border: 1px solid var(--n200);
+            border-radius: 6px;
+            padding: 1px 6px;
+            font-size: 12px;
+            font-family: 'SF Mono', 'Courier New', monospace;
+            color: var(--terra);
+        }
+
+        .spacer-sm {
+            height: 12px;
+        }
+
+        .spacer-md {
+            height: 24px;
+        }
+
+        /* ── DESKTOP CLAMP ───────────────────────────────────── */
+        @media (min-width: 520px) {
+            .app {
+                border-left: 1px solid var(--n200);
+                border-right: 1px solid var(--n200);
+            }
+        }
+
+        /* ── PRINT STYLES ────────────────────────────────────── */
+        @media print {
+
+            .bottom-nav,
+            .top-bar,
+            .progress-track,
+            .back-top,
+            .cover-cta {
+                display: none !important;
+            }
+
+            .section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+
+        <!-- ════ PROGRESS BAR ════ -->
+        <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <!-- ════ COVER ════ -->
+        <section id="cover">
+            <div class="cover-logo">N</div>
+            <h1>NOOK<span>.</span></h1>
+            <p class="cover-tagline">Your quiet corner for two.</p>
+            <div class="cover-pill">✦ &nbsp; User Guide &nbsp; ✦</div>
+            <div class="cover-cta">
+                <button class="cover-cta-btn"
+                    onclick="document.getElementById('toc').scrollIntoView({behavior:'smooth'})">
+                    Get started →
+                </button>
+                <span class="cover-cta-hint">Scroll to explore all 9 sections</span>
+            </div>
+        </section>
+
+        <!-- ════ TABLE OF CONTENTS ════ -->
+        <section id="toc" style="padding: 28px 20px 40px; background: var(--white);">
+            <h2 class="toc-heading">Contents</h2>
+            <p class="toc-sub">Everything you need to know about your Nook.</p>
+            <div class="toc-list">
+                <a class="toc-row" onclick="scrollTo('s01')">
+                    <div class="toc-num">01</div>
+                    <div class="toc-text">
+                        <div class="toc-title">Sign In</div>
+                        <div class="toc-desc">Magic link & OTP — no password needed</div>
+                    </div>
+                    <div class="toc-arrow">›</div>
+                </a>
+                <a class="toc-row" onclick="scrollTo('s02')">
+                    <div class="toc-num">02</div>
+                    <div class="toc-text">
+                        <div class="toc-title">Onboarding Hub</div>
+                        <div class="toc-desc">Set your name, choose to create or join</div>
+                    </div>
+                    <div class="toc-arrow">›</div>
+                </a>
+                <a class="toc-row" onclick="scrollTo('s03')">
+                    <div class="toc-num">03</div>
+                    <div class="toc-text">
+                        <div class="toc-title">Creating & Joining a Space</div>
+                        <div class="toc-desc">Invite codes and pairing with your partner</div>
+                    </div>
+                    <div class="toc-arrow">›</div>
+                </a>
+                <a class="toc-row" onclick="scrollTo('s04')">
+                    <div class="toc-num">04</div>
+                    <div class="toc-text">
+                        <div class="toc-title">Home Feed</div>
+                        <div class="toc-desc">Notes, photos, voice — your shared canvas</div>
+                    </div>
+                    <div class="toc-arrow">›</div>
+                </a>
+                <a class="toc-row" onclick="scrollTo('s05')">
+                    <div class="toc-num">05</div>
+                    <div class="toc-text">
+                        <div class="toc-title">Daily Prompts</div>
+                        <div class="toc-desc">Dual-unlock, nudge, custom questions</div>
+                    </div>
+                    <div class="toc-arrow">›</div>
+                </a>
+                <a class="toc-row" onclick="scrollTo('s06')">
+                    <div class="toc-num">06</div>
+                    <div class="toc-text">
+                        <div class="toc-title">Memories Archive</div>
+                        <div class="toc-desc">Your shared prompt history</div>
+                    </div>
+                    <div class="toc-arrow">›</div>
+                </a>
+                <a class="toc-row" onclick="scrollTo('s07')">
+                    <div class="toc-num">07</div>
+                    <div class="toc-text">
+                        <div class="toc-title">Space Profile & Settings</div>
+                        <div class="toc-desc">Stats, invite code, name editing, account</div>
+                    </div>
+                    <div class="toc-arrow">›</div>
+                </a>
+                <a class="toc-row" onclick="scrollTo('s08')">
+                    <div class="toc-num">08</div>
+                    <div class="toc-text">
+                        <div class="toc-title">App Lock & Security</div>
+                        <div class="toc-desc">Biometric / PIN protection</div>
+                    </div>
+                    <div class="toc-arrow">›</div>
+                </a>
+                <a class="toc-row" onclick="scrollTo('s09')">
+                    <div class="toc-num">09</div>
+                    <div class="toc-text">
+                        <div class="toc-title">Tips & Quick Reference</div>
+                        <div class="toc-desc">Gestures, offline mode, notifications, FAQs</div>
+                    </div>
+                    <div class="toc-arrow">›</div>
+                </a>
+            </div>
+        </section>
+
+        <!-- ════ SECTION 01 — SIGN IN ════ -->
+        <section class="section" id="s01">
+            <div class="section-hero terra-bg">
+                <div class="section-num">01 · Getting Started</div>
+                <h2 class="section-title">Sign In</h2>
+                <p class="section-intro">Nook uses passwordless authentication. Enter your email, get a secure link — no
+                    passwords to remember, ever.</p>
+            </div>
+
+            <div class="spacer-sm"></div>
+
+            <div class="step-list">
+                <div class="step-row">
+                    <div class="step-num">1</div>
+                    <div class="step-text">Open the app and you'll see the <strong>NOOK.</strong> sign-in screen. Type
+                        your email address into the input field.</div>
+                </div>
+                <div class="step-row">
+                    <div class="step-num">2</div>
+                    <div class="step-text">Tap <strong>Continue</strong>. Nook instantly sends a secure magic link to
+                        your inbox.</div>
+                </div>
+                <div class="step-row">
+                    <div class="step-num">3</div>
+                    <div class="step-text">Open your email and tap the link — it automatically opens Nook and signs you
+                        in. Done.</div>
+                </div>
+                <div class="step-row">
+                    <div class="step-num">4</div>
+                    <div class="step-text">Prefer typing? Tap <strong>"Enter code instead"</strong> on the confirmation
+                        screen. Navigate to the OTP page and type your 6-digit code — <strong>Nook auto-submits the
+                            moment you type the last digit.</strong></div>
+                </div>
+            </div>
+
+            <!-- Sign-in mockup -->
+            <div class="mockup">
+                <div
+                    style="background:linear-gradient(160deg,var(--cream) 0%,var(--cream-dk) 100%); padding:28px 20px 20px; display:flex; flex-direction:column; align-items:center; text-align:center;">
+                    <div
+                        style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,var(--sage),var(--terra));display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:white;margin-bottom:12px;">
+                        N</div>
+                    <div
+                        style="font-family:'Playfair Display',serif;font-size:28px;color:var(--charcoal);margin-bottom:4px;">
+                        NOOK.</div>
+                    <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Your quiet corner<br>for two.
+                    </div>
+                    <div
+                        style="background:white;border-radius:20px;padding:16px;width:100%;box-shadow:0 4px 16px rgba(0,0,0,0.07);">
+                        <div
+                            style="font-size:12px;font-weight:600;color:var(--charcoal);margin-bottom:8px;text-align:left;">
+                            Sign in to continue</div>
+                        <div
+                            style="background:var(--n100);border:1px solid var(--n200);border-radius:12px;padding:12px 14px;margin-bottom:10px;">
+                            <div style="font-size:13px;color:#9CA3AF;">you@example.com</div>
+                        </div>
+                        <div
+                            style="background:var(--terra);border-radius:var(--radius-pill);padding:12px;text-align:center;color:white;font-size:13px;font-weight:600;">
+                            Continue</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tip terra">
+                <span class="tip-icon">💡</span>
+                <p class="tip-body"><strong>Tip:</strong> If your magic link expires before you tap it, go back to the
+                    sign-in screen and request a fresh one. Links are single-use for security.</p>
+            </div>
+        </section>
+
+        <!-- ════ SECTION 02 — ONBOARDING HUB ════ -->
+        <section class="section" id="s02">
+            <div class="section-hero sage-bg">
+                <div class="section-num">02 · First Steps</div>
+                <h2 class="section-title">Onboarding Hub</h2>
+                <p class="section-intro">After signing in for the first time, you land here — a beautiful glassmorphism
+                    screen to set your identity before anything else.</p>
+            </div>
+
+            <div class="spacer-sm"></div>
+
+            <div class="card terra-l">
+                <div class="card-header">
+                    <div class="card-icon terra">✍️</div>
+                    <div>
+                        <div class="card-title">Set Your Display Name</div>
+                        <div class="card-subtitle">First-time only</div>
+                    </div>
+                </div>
+                <p class="card-body">Nook asks <em>"What should your partner call you?"</em> Type your name and tap
+                    <strong>Continue</strong>. This is how you appear throughout the app — on notes, prompt responses,
+                    and in your partner's feed.</p>
+            </div>
+
+            <div class="card sage-l">
+                <div class="card-header">
+                    <div class="card-icon sage">🌿</div>
+                    <div>
+                        <div class="card-title">Create or Join a Space</div>
+                        <div class="card-subtitle">Once your name is saved</div>
+                    </div>
+                </div>
+                <p class="card-body">You'll see two options side by side:</p>
+                <div class="spacer-sm"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;">
+                    <div
+                        style="background:var(--terra);border-radius:var(--radius-pill);padding:12px;text-align:center;color:white;font-size:13px;font-weight:600;">
+                        Create a Space</div>
+                    <div
+                        style="background:white;border:1.5px solid var(--n200);border-radius:var(--radius-pill);padding:12px;text-align:center;color:var(--charcoal);font-size:13px;font-weight:600;">
+                        Join a Space</div>
+                </div>
+            </div>
+
+            <div class="tip gold">
+                <span class="tip-icon">⭐</span>
+                <p class="tip-body"><strong>Already have a space?</strong> If you return here to create an extra space,
+                    a <strong>Cancel</strong> button appears at the top-left to go straight back to your feed.</p>
+            </div>
+        </section>
+
+        <!-- ════ SECTION 03 — CREATING & JOINING ════ -->
+        <section class="section" id="s03">
+            <div class="section-hero terra-bg">
+                <div class="section-num">03 · Pairing Up</div>
+                <h2 class="section-title">Creating &amp; Joining a Space</h2>
+                <p class="section-intro">A Space is the private, shared world you and your partner inhabit. One of you
+                    creates it; the other joins with a 6-character code.</p>
+            </div>
+
+            <div class="spacer-sm"></div>
+            <h3 class="sub-heading">🏡 Creating a Space</h3>
+
+            <div class="step-list">
+                <div class="step-row">
+                    <div class="step-num">1</div>
+                    <div class="step-text">Tap <strong>Create a Space</strong> from the Onboarding Hub.</div>
+                </div>
+                <div class="step-row">
+                    <div class="step-num">2</div>
+                    <div class="step-text">Nook instantly creates your space and generates a unique <strong>6-character
+                            invite code</strong>.</div>
+                </div>
+                <div class="step-row">
+                    <div class="step-num">3</div>
+                    <div class="step-text">Tap <strong>Copy code</strong> — or the share icon — to send the code to your
+                        partner via iMessage, WhatsApp, or any other app.</div>
+                </div>
+                <div class="step-row">
+                    <div class="step-num">4</div>
+                    <div class="step-text">Once they join, tap <strong>"Continue to my space"</strong> to enter your
+                        feed.</div>
+                </div>
+            </div>
+
+            <div class="invite-code-box">
+                <div class="invite-code-label">Invite Code</div>
+                <div class="invite-code-val">A3KR7X</div>
+                <div class="invite-code-actions">
+                    <button class="invite-btn">Copy code</button>
+                    <button class="invite-btn share">↗</button>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+            <h3 class="sub-heading">🔑 Joining a Space</h3>
+
+            <div class="step-list">
+                <div class="step-row">
+                    <div class="step-num">1</div>
+                    <div class="step-text">Tap <strong>Join a Space</strong> from the Onboarding Hub.</div>
+                </div>
+                <div class="step-row">
+                    <div class="step-num">2</div>
+                    <div class="step-text">Enter the <strong>6-character code</strong> your partner shared (not
+                        case-sensitive).</div>
+                </div>
+                <div class="step-row">
+                    <div class="step-num">3</div>
+                    <div class="step-text">Tap <strong>Join Space</strong>. Nook verifies the code and securely adds
+                        you. You'll land straight in the Home Feed.</div>
+                </div>
+            </div>
+
+            <div class="tip sage">
+                <span class="tip-icon">🌿</span>
+                <p class="tip-body"><strong>Multiple Spaces:</strong> Nook supports more than one space. Tap your name
+                    on the Home Feed to open the <strong>Space Switcher</strong> and jump between them.</p>
+            </div>
+
+            <div class="tip gold" style="margin-top:10px;">
+                <span class="tip-icon">🔒</span>
+                <p class="tip-body"><strong>Security:</strong> Invite codes are unique and non-guessable. You can always
+                    find and re-share yours from the Space Profile tab.</p>
+            </div>
+        </section>
+
+        <!-- ════ SECTION 04 — HOME FEED ════ -->
+        <section class="section" id="s04">
+            <div class="section-hero sage-bg">
+                <div class="section-num">04 · Main Screen</div>
+                <h2 class="section-title">Home Feed</h2>
+                <p class="section-intro">Your shared canvas — a Pinterest-style masonry grid where you and your
+                    partner's notes, photos, and voice messages live side by side.</p>
+            </div>
+
+            <div class="spacer-sm"></div>
+
+            <!-- Mockup -->
+            <div class="mockup">
+                <div class="mockup-bar">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <div class="mockup-bar-title">Good morning, Alex. </div>
+                        <div style="color:var(--terra);font-size:16px;">⌄</div>
+                    </div>
+                    <div class="mockup-bar-sub">Share a moment with Jamie.</div>
+                </div>
+                <div class="mockup-body">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                        <div>
+                            <div class="m-note">
+                                <div class="m-author">YOU</div>
+                                <div class="m-text">Saw the most beautiful sunset today 🌅 reminded me of last summer.
+                                </div>
+                            </div>
+                            <div class="m-note">
+                                <div class="m-img">🎙️</div>
+                                <div class="m-author sage">JAMIE</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="m-note">
+                                <div class="m-img" style="height:110px;">🖼️</div>
+                                <div class="m-author sage">JAMIE</div>
+                            </div>
+                            <div class="m-note">
+                                <div class="m-author">YOU</div>
+                                <div class="m-text">Missing you ☁️</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="m-fab">+</div>
+                </div>
+            </div>
+
+            <h3 class="sub-heading">Note Types</h3>
+
+            <div class="feature-row">
+                <div class="feature-item">
+                    <div class="feature-emoji">📝</div>
+                    <div class="feature-title">Text Notes</div>
+                    <div class="feature-desc">Rich-text with bold &amp; italic. Shown on white rounded cards.</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-emoji">🖼️</div>
+                    <div class="feature-title">Photo Notes</div>
+                    <div class="feature-desc">Polaroid-style cards preserving your photo's original aspect ratio.</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-emoji">🎙️</div>
+                    <div class="feature-title">Voice Notes</div>
+                    <div class="feature-desc">Waveform player cards. Record up to 5 minutes or upload a file.</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-emoji">📌</div>
+                    <div class="feature-title">Pinned Notes</div>
+                    <div class="feature-desc">A terracotta pushpin badge appears on any pinned note.</div>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+            <h3 class="sub-heading">✦ Creating a Note</h3>
+
+            <div class="card terra-l">
+                <div class="card-header">
+                    <div class="card-icon terra">＋</div>
+                    <div>
+                        <div class="card-title">Floating Action Button</div>
+                        <div class="card-subtitle">Bottom-right corner</div>
+                    </div>
+                </div>
+                <p class="card-body">Tap the <strong>terracotta + button</strong> floating at the bottom-right. The
+                    Create Note modal slides up with three modes — text, photo, and voice recording. Tap the terracotta
+                    send button or microphone button to post.</p>
+            </div>
+
+            <div class="divider"></div>
+            <h3 class="sub-heading">✦ Managing Notes</h3>
+
+            <div class="card terra-l" style="margin-bottom:10px;">
+                <div class="card-header">
+                    <div class="card-icon terra">☝️</div>
+                    <div>
+                        <div class="card-title">Tap to Expand</div>
+                    </div>
+                </div>
+                <p class="card-body">A single tap opens the <strong>full-screen detail view</strong>. See the full text,
+                    full-resolution photo, or audio player. Edit and delete icons appear in the header for your own
+                    notes.</p>
+            </div>
+
+            <div class="card sage-l">
+                <div class="card-header">
+                    <div class="card-icon sage">👇</div>
+                    <div>
+                        <div class="card-title">Long-Press Context Menu</div>
+                    </div>
+                </div>
+                <p class="card-body">Hold any note for ~350ms to summon a dark overlay context menu:</p>
+                <div class="spacer-sm"></div>
+                <div style="display:flex;gap:16px;margin-top:4px;">
+                    <div style="text-align:center;flex:1;">
+                        <div
+                            style="width:44px;height:44px;background:rgba(44,44,44,0.8);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 6px;">
+                            📌</div>
+                        <div
+                            style="font-size:11px;color:white;background:rgba(44,44,44,0.7);border-radius:10px;padding:4px 8px;">
+                            Pin / Unpin<br><span style="opacity:0.6;font-size:10px;">All notes</span></div>
+                    </div>
+                    <div style="text-align:center;flex:1;">
+                        <div
+                            style="width:44px;height:44px;background:rgba(44,44,44,0.8);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 6px;">
+                            ✏️</div>
+                        <div
+                            style="font-size:11px;color:white;background:rgba(44,44,44,0.7);border-radius:10px;padding:4px 8px;">
+                            Edit<br><span style="opacity:0.6;font-size:10px;">Your notes only</span></div>
+                    </div>
+                    <div style="text-align:center;flex:1;">
+                        <div
+                            style="width:44px;height:44px;background:rgba(44,44,44,0.8);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 6px;">
+                            🗑️</div>
+                        <div
+                            style="font-size:11px;color:white;background:rgba(44,44,44,0.7);border-radius:10px;padding:4px 8px;">
+                            Delete<br><span style="opacity:0.6;font-size:10px;">Your notes only</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tip terra">
+                <span class="tip-icon">🔄</span>
+                <p class="tip-body"><strong>Switching Spaces:</strong> Tap your greeting name at the top of the feed
+                    (the one with the <strong>⌄</strong> caret) to open the Space Switcher and jump between spaces.</p>
+            </div>
+        </section>
+
+        <!-- ════ SECTION 05 — DAILY PROMPTS ════ -->
+        <section class="section" id="s05">
+            <div class="section-hero terra-bg">
+                <div class="section-num">05 · Daily Tab</div>
+                <h2 class="section-title">Daily Prompts</h2>
+                <p class="section-intro">Every day a fresh question arrives to help you and your partner discover more
+                    about each other.</p>
+            </div>
+
+            <div class="spacer-sm"></div>
+
+            <div class="card terra-l">
+                <div class="card-header">
+                    <div class="card-icon terra">🔒</div>
+                    <div>
+                        <div class="card-title">The Dual-Unlock Mechanism</div>
+                        <div class="card-subtitle">Keeps it honest</div>
+                    </div>
+                </div>
+                <p class="card-body">You <strong>cannot read your partner's answer</strong> until you've written your
+                    own. This prevents anchoring bias and leads to more genuine, independent responses. Once both
+                    partners answer, both responses reveal simultaneously.</p>
+            </div>
+
+            <h3 class="sub-heading">How It Works</h3>
+
+            <div class="step-list">
+                <div class="step-row">
+                    <div class="step-num">1</div>
+                    <div class="step-text">Tap the <strong>Daily</strong> tab (second tab in the bottom bar).</div>
+                </div>
+                <div class="step-row">
+                    <div class="step-num">2</div>
+                    <div class="step-text">You'll see today's main question in a <strong>Sage-tinted Prompt
+                            Card</strong> at the top.</div>
+                </div>
+                <div class="step-row">
+                    <div class="step-num">3</div>
+                    <div class="step-text">Your partner's response slot is <strong>blurred &amp; locked</strong> until
+                        you submit your own.</div>
+                </div>
+                <div class="step-row">
+                    <div class="step-num">4</div>
+                    <div class="step-text">Type your answer in the text field at the bottom and tap
+                        <strong>Send</strong>.</div>
+                </div>
+                <div class="step-row">
+                    <div class="step-num">5</div>
+                    <div class="step-text">Once both partners have answered, <strong>both responses reveal</strong> on
+                        the card.</div>
+                </div>
+                <div class="step-row">
+                    <div class="step-num">6</div>
+                    <div class="step-text">A live countdown shows how long until tomorrow's new prompt arrives.</div>
+                </div>
+            </div>
+
+            <!-- Prompt mockup -->
+            <div class="m-prompt">
+                <div class="m-prompt-label">📅 Today's Prompt</div>
+                <div class="m-prompt-q">What's a small thing I do that always makes you smile?</div>
+                <div class="m-slot">
+                    <div class="m-slot-label">Your Answer ✓</div>
+                    <div class="m-slot-text">When you leave sticky notes on my coffee mug. It's silly but I love it
+                        every time. 🍵</div>
+                </div>
+                <div class="m-slot blurred">
+                    <div class="m-slot-label" style="color:var(--muted);">Jamie's Answer — Locked</div>
+                    <div class="m-slot-text">Answer the prompt above to unlock and see what your partner said about you.
+                    </div>
+                </div>
+            </div>
+
+            <div class="tip terra">
+                <span class="tip-icon">🔔</span>
+                <p class="tip-body"><strong>Nudge your partner!</strong> If they haven't answered yet, tap the
+                    <strong>Nudge</strong> button to send them a push notification. There's a 2-hour cooldown to avoid
+                    spam.</p>
+            </div>
+
+            <div class="divider"></div>
+            <h3 class="sub-heading">✦ Custom & Additional Prompts</h3>
+
+            <div class="card terra-l" style="margin-bottom:10px;">
+                <div class="card-header">
+                    <div class="card-icon terra">➕</div>
+                    <div>
+                        <div class="card-title">Ask a Custom Question</div>
+                    </div>
+                </div>
+                <p class="card-body">Tap <strong>"Ask a Question"</strong> at the bottom of the Daily screen. Type any
+                    question and submit. It appears as an <strong>Additional Prompt</strong> card below the main one for
+                    both of you to answer anytime today.</p>
+            </div>
+
+            <div class="card sage-l">
+                <div class="card-header">
+                    <div class="card-icon sage">✏️</div>
+                    <div>
+                        <div class="card-title">Edit Your Response</div>
+                    </div>
+                </div>
+                <p class="card-body">Tap <strong>Edit</strong> on your submitted response to update your answer
+                    (same-day only). If you authored a custom question, you can also <strong>Delete</strong> it —
+                    removing the question and all responses after a confirmation.</p>
+            </div>
+
+            <div class="tip sage">
+                <span class="tip-icon">📡</span>
+                <p class="tip-body"><strong>Works Offline:</strong> Nook caches 80+ prompts locally. Today's question
+                    generates even with no internet. Your response syncs automatically when you're back online.</p>
+            </div>
+        </section>
+
+        <!-- ════ SECTION 06 — MEMORIES ════ -->
+        <section class="section" id="s06">
+            <div class="section-hero sage-bg">
+                <div class="section-num">06 · Memories Tab</div>
+                <h2 class="section-title">Memories Archive</h2>
+                <p class="section-intro">Every day you both answer a prompt, it's archived here — a growing timeline of
+                    honest answers and mutual discoveries.</p>
+            </div>
+
+            <div class="spacer-sm"></div>
+
+            <div class="card terra-l">
+                <div class="card-header">
+                    <div class="card-icon terra">📖</div>
+                    <div>
+                        <div class="card-title">Browsing Your Memories</div>
+                    </div>
+                </div>
+                <p class="card-body">Navigate to the <strong>Memories</strong> tab (third tab). You'll see a list of
+                    archived prompts, each as a clean white card showing the <strong>date</strong> and <strong>prompt
+                        question</strong>. A terracotta pill at the top shows the total count — e.g. <span
+                        class="badge">14 Archived</span>.</p>
+            </div>
+
+            <div class="card sage-l">
+                <div class="card-header">
+                    <div class="card-icon sage">💌</div>
+                    <div>
+                        <div class="card-title">Open a Memory</div>
+                    </div>
+                </div>
+                <p class="card-body">Tap any memory card to open a full-screen sheet. You'll see a
+                    <strong>PromptCard</strong> with both your answer and your partner's fully revealed — no blurring.
+                    Scroll to read everything in detail.</p>
+            </div>
+
+            <!-- Mockup -->
+            <div class="mockup">
+                <div class="mockup-bar">
+                    <div class="mockup-bar-title">Memories</div>
+                </div>
+                <div class="mockup-body">
+                    <div style="margin-bottom:10px;"><span class="badge">14 Archived</span></div>
+                    <div class="m-note" style="border-radius:14px;">
+                        <div
+                            style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#9CA3AF;margin-bottom:4px;">
+                            Aug 22, 2026</div>
+                        <div
+                            style="font-family:'Playfair Display',serif;font-size:14px;color:var(--charcoal);line-height:1.3;">
+                            What's a small thing I do that always makes you smile?</div>
+                    </div>
+                    <div class="m-note" style="border-radius:14px;">
+                        <div
+                            style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#9CA3AF;margin-bottom:4px;">
+                            Aug 21, 2026</div>
+                        <div
+                            style="font-family:'Playfair Display',serif;font-size:14px;color:var(--charcoal);line-height:1.3;">
+                            If we could live anywhere for a year, where would you choose?</div>
+                    </div>
+                    <div class="m-note" style="border-radius:14px;">
+                        <div
+                            style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#9CA3AF;margin-bottom:4px;">
+                            Aug 20, 2026</div>
+                        <div
+                            style="font-family:'Playfair Display',serif;font-size:14px;color:var(--charcoal);line-height:1.3;">
+                            What's something you've always wanted to tell me?</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tip gold">
+                <span class="tip-icon">🏅</span>
+                <p class="tip-body"><strong>Building Your Streak:</strong> Each completed memory contributes to your
+                    <strong>Longest Streak</strong> and <strong>Prompts Shared</strong> stats in the Space Profile tab.
+                    Keep answering every day to grow it!</p>
+            </div>
+        </section>
+
+        <!-- ════ SECTION 07 — SPACE PROFILE ════ -->
+        <section class="section" id="s07">
+            <div class="section-hero terra-bg">
+                <div class="section-num">07 · Space Tab</div>
+                <h2 class="section-title">Space Profile &amp; Settings</h2>
+                <p class="section-intro">Your control panel — manage your identity, shared space, invite codes, and
+                    account.</p>
+            </div>
+
+            <div class="spacer-sm"></div>
+            <h3 class="sub-heading">📊 Your Journey</h3>
+
+            <div class="stat-grid">
+                <div class="stat-box">
+                    <div class="stat-n">42</div>
+                    <div class="stat-lbl">Days Together</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-n">14</div>
+                    <div class="stat-lbl">Prompts Shared</div>
+                </div>
+                <div class="stat-box" style="border-left:3px solid var(--terra);">
+                    <div class="stat-n">🔥7</div>
+                    <div class="stat-lbl">Longest Streak</div>
+                </div>
+            </div>
+
+            <p style="font-size:12px;color:var(--muted);padding:0 16px;margin-bottom:16px;">The 🔥 fire icon lights up
+                bright orange when your streak is currently active.</p>
+
+            <div class="divider"></div>
+            <h3 class="sub-heading">🔑 Invite Code</h3>
+
+            <div class="card">
+                <p class="card-body">Your space's invite code is always visible here. Tap <strong>Copy</strong> to copy
+                    it to your clipboard, then share it with anyone you want to invite to this space.</p>
+            </div>
+
+            <div class="divider"></div>
+            <h3 class="sub-heading">✏️ Editing</h3>
+
+            <div class="card terra-l" style="margin-bottom:10px;">
+                <div class="card-header">
+                    <div class="card-icon terra">👤</div>
+                    <div>
+                        <div class="card-title">Change Display Name</div>
+                    </div>
+                </div>
+                <p class="card-body">Tap the pencil icon next to your display name. A themed modal slides up with a text
+                    field. Edit and tap Save.</p>
+            </div>
+
+            <div class="card sage-l" style="margin-bottom:10px;">
+                <div class="card-header">
+                    <div class="card-icon sage">🏡</div>
+                    <div>
+                        <div class="card-title">Rename the Space</div>
+                    </div>
+                </div>
+                <p class="card-body">Tap the pencil icon next to your space name to rename it. The new name is visible
+                    to both members.</p>
+            </div>
+
+            <div class="divider"></div>
+            <h3 class="sub-heading">⚠️ Account Actions</h3>
+
+            <div class="card gold-l" style="margin-bottom:10px;">
+                <div class="card-header">
+                    <div class="card-icon gold">🚪</div>
+                    <div>
+                        <div class="card-title">Leave Space</div>
+                    </div>
+                </div>
+                <p class="card-body">Removes you from the current space. Your partner and all content remain. A
+                    confirmation modal appears first. You'll return to the Onboarding Hub to join or create another
+                    space.</p>
+            </div>
+
+            <div class="card" style="margin-bottom:10px;">
+                <div class="card-header">
+                    <div class="card-icon dark">🔓</div>
+                    <div>
+                        <div class="card-title">Sign Out</div>
+                    </div>
+                </div>
+                <p class="card-body">Tap Sign Out to return to the sign-in screen. Your data is safely stored — just
+                    sign back in to access it.</p>
+            </div>
+
+            <div class="card red-l">
+                <div class="card-header">
+                    <div class="card-icon red">🗑️</div>
+                    <div>
+                        <div class="card-title">Delete Account</div>
+                    </div>
+                </div>
+                <p class="card-body">Permanently removes your account and <em>all</em> associated data. A confirmation
+                    modal appears first. <strong>This action cannot be undone.</strong></p>
+            </div>
+        </section>
+
+        <!-- ════ SECTION 08 — APP LOCK ════ -->
+        <section class="section" id="s08">
+            <div class="section-hero dark-bg">
+                <div class="section-num" style="color:rgba(255,255,255,0.5);">08 · Security</div>
+                <h2 class="section-title">App Lock</h2>
+                <p class="section-intro">Require biometric authentication or your device PIN every time you open the app
+                    — keeping your private memories safe.</p>
+            </div>
+
+            <div class="spacer-sm"></div>
+
+            <div class="lock-screen">
+                <div class="lock-icon">🔐</div>
+                <div class="lock-title">Nook is Locked</div>
+                <div class="lock-sub">Please authenticate to access<br>your private space.</div>
+                <div
+                    style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:16px;padding:16px;margin-bottom:16px;">
+                    <div style="font-size:28px;margin-bottom:8px;">👁️</div>
+                    <div style="font-size:12px;opacity:0.7;margin-bottom:12px;">Use Face ID to unlock</div>
+                    <div class="lock-btn">Authenticate</div>
+                </div>
+            </div>
+
+            <h3 class="sub-heading">Enabling App Lock</h3>
+
+            <div class="step-list">
+                <div class="step-row">
+                    <div class="step-num">1</div>
+                    <div class="step-text">Open the <strong>Space</strong> tab (fourth tab in the bottom bar).</div>
+                </div>
+                <div class="step-row">
+                    <div class="step-num">2</div>
+                    <div class="step-text">Find the <strong>App Lock</strong> row with the lock icon.</div>
+                </div>
+                <div class="step-row">
+                    <div class="step-num">3</div>
+                    <div class="step-text">Toggle the switch. The switch turns orange when App Lock is active.</div>
+                </div>
+            </div>
+
+            <div class="card sage-l">
+                <div class="card-header">
+                    <div class="card-icon sage">🛡️</div>
+                    <div>
+                        <div class="card-title">When It Locks</div>
+                    </div>
+                </div>
+                <p class="card-body">A biometric prompt appears on:<br><br>
+                    • <strong>Cold start</strong> — every time you open the app<br>
+                    • <strong>Background return</strong> — after 30+ seconds away from the app<br><br>
+                    Nook uses your device's Face ID, Touch ID, or PIN. Your biometric data is <strong>never
+                        stored</strong> by Nook.
+                </p>
+            </div>
+
+            <div class="tip terra">
+                <span class="tip-icon">🔑</span>
+                <p class="tip-body"><strong>Disabling:</strong> Simply toggle the switch back off in the Space tab. The
+                    preference persists between app restarts.</p>
+            </div>
+        </section>
+
+        <!-- ════ SECTION 09 — TIPS ════ -->
+        <section class="section" id="s09">
+            <div class="section-hero sage-bg">
+                <div class="section-num">09 · Quick Reference</div>
+                <h2 class="section-title">Tips &amp; Reference</h2>
+                <p class="section-intro">Gestures, navigation, offline behaviour, push notifications, and common
+                    questions — all in one place.</p>
+            </div>
+
+            <div class="spacer-sm"></div>
+            <h3 class="sub-heading">🖐️ Gestures</h3>
+
+            <div class="gesture-list" style="margin:0 16px 16px;">
+                <div class="gesture-row">
+                    <div class="gesture-icon">☝️</div>
+                    <div>
+                        <div class="gesture-title">Tap — Note Card</div>
+                        <div class="gesture-desc">Opens full-screen expanded view</div>
+                    </div>
+                </div>
+                <div class="gesture-row">
+                    <div class="gesture-icon">👇</div>
+                    <div>
+                        <div class="gesture-title">Long Press — Note Card</div>
+                        <div class="gesture-desc">Dark overlay context menu (Pin / Edit / Delete)</div>
+                    </div>
+                </div>
+                <div class="gesture-row">
+                    <div class="gesture-icon">⌄</div>
+                    <div>
+                        <div class="gesture-title">Tap Your Name (Home)</div>
+                        <div class="gesture-desc">Opens the Space Switcher modal</div>
+                    </div>
+                </div>
+                <div class="gesture-row">
+                    <div class="gesture-icon">🔢</div>
+                    <div>
+                        <div class="gesture-title">OTP 6th Digit</div>
+                        <div class="gesture-desc">Auto-submits — no button press needed</div>
+                    </div>
+                </div>
+                <div class="gesture-row">
+                    <div class="gesture-icon">📋</div>
+                    <div>
+                        <div class="gesture-title">Copy Invite Code</div>
+                        <div class="gesture-desc">Create Space screen or Space Profile tab</div>
+                    </div>
+                </div>
+                <div class="gesture-row">
+                    <div class="gesture-icon">↗️</div>
+                    <div>
+                        <div class="gesture-title">Share Invite Code</div>
+                        <div class="gesture-desc">Tap the share icon to send via any app</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+            <h3 class="sub-heading">🗺️ Navigation Bar</h3>
+
+            <!-- Tab bar mockup -->
+            <div class="mockup" style="margin-bottom:16px;">
+                <div class="m-tabs" style="padding:14px 0 8px;">
+                    <div class="m-tab active">
+                        <div class="m-tab-icon">🏠</div>
+                        <div class="m-tab-label" style="color:var(--terra);">Home</div>
+                    </div>
+                    <div class="m-tab">
+                        <div class="m-tab-icon">📅</div>
+                        <div class="m-tab-label">Daily</div>
+                    </div>
+                    <div class="m-tab">
+                        <div class="m-tab-icon">🖼️</div>
+                        <div class="m-tab-label">Memories</div>
+                    </div>
+                    <div class="m-tab">
+                        <div class="m-tab-icon">👤</div>
+                        <div class="m-tab-label">Space</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-list">
+                <div class="step-row">
+                    <div class="step-num" style="background:var(--charcoal);">🏠</div>
+                    <div class="step-text"><strong>Home</strong> — Your shared masonry feed of all notes &amp; photos.
+                    </div>
+                </div>
+                <div class="step-row">
+                    <div class="step-num" style="background:var(--charcoal);">📅</div>
+                    <div class="step-text"><strong>Daily</strong> — Today's prompt, your answer, and your partner's
+                        (once both answered).</div>
+                </div>
+                <div class="step-row">
+                    <div class="step-num" style="background:var(--charcoal);">🖼️</div>
+                    <div class="step-text"><strong>Memories</strong> — Archive of all past completed prompt exchanges.
+                    </div>
+                </div>
+                <div class="step-row">
+                    <div class="step-num" style="background:var(--charcoal);">👤</div>
+                    <div class="step-text"><strong>Space</strong> — Profile, settings, stats, security &amp; account
+                        management.</div>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+            <h3 class="sub-heading">📡 Offline &amp; Notifications</h3>
+
+            <div class="card sage-l" style="margin-bottom:10px;">
+                <div class="card-header">
+                    <div class="card-icon sage">📵</div>
+                    <div>
+                        <div class="card-title">Works Offline</div>
+                    </div>
+                </div>
+                <p class="card-body">Nook is <strong>offline-first</strong>. Everything is stored locally using SQLite.
+                    Reading the feed, writing notes, answering prompts, and browsing memories all work without internet.
+                    Actions queue and sync automatically when you reconnect.</p>
+            </div>
+
+            <div class="feature-row" style="margin-bottom:16px;">
+                <div class="feature-item">
+                    <div class="feature-emoji">✦</div>
+                    <div class="feature-title">New Note Alert</div>
+                    <div class="feature-desc">Partner posts → instant push notification</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-emoji">👋</div>
+                    <div class="feature-title">Partner Nudge</div>
+                    <div class="feature-desc">Send a reminder (2-hour cooldown)</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-emoji">📅</div>
+                    <div class="feature-title">Daily Reminder</div>
+                    <div class="feature-desc">Prompted if you haven't answered by evening</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-emoji">🔓</div>
+                    <div class="feature-title">Unlock Alert</div>
+                    <div class="feature-desc">Notified when both answers reveal</div>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+            <h3 class="sub-heading">❓ Common Questions</h3>
+
+            <div class="card" style="margin-bottom:10px;">
+                <div class="card-title" style="margin-bottom:8px;">Can I be in more than one Space?</div>
+                <p class="card-body">Yes. Nook supports multiple spaces. Create or join additional spaces any time.
+                    Switch between them using the Space Switcher — tap your name on the Home Feed.</p>
+            </div>
+
+            <div class="card" style="margin-bottom:10px;">
+                <div class="card-title" style="margin-bottom:8px;">What happens if I leave a Space?</div>
+                <p class="card-body">Your account is removed from that space. Your partner and all shared notes &amp;
+                    memories remain intact — only you lose access. You can join or create another space immediately.</p>
+            </div>
+
+            <div class="card" style="margin-bottom:10px;">
+                <div class="card-title" style="margin-bottom:8px;">Can I edit a prompt response?</div>
+                <p class="card-body">Yes — as long as it's still today's prompt. Tap <strong>Edit</strong> on your
+                    submitted response in the Daily tab to update your answer.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-title" style="margin-bottom:8px;">What does "Dual-Unlock" mean?</div>
+                <p class="card-body">You must submit your own answer before you can see your partner's. This prevents
+                    anchoring bias — reading their answer first — and leads to more honest, independent responses. Once
+                    both are in, both reveal at the same time.</p>
+            </div>
+
+            <a class="back-top" onclick="document.getElementById('cover').scrollIntoView({behavior:'smooth'})">
+                ↑ Back to top
+            </a>
+        </section>
+
+        <!-- ════ BACK COVER ════ -->
+        <section id="back-cover">
+            <div class="cover-logo">N</div>
+            <div class="spacer-md"></div>
+            <h2>NOOK<span>.</span></h2>
+            <div class="spacer-sm"></div>
+            <p>Built for two people who want to stay quietly connected — sharing moments, thoughts, and questions that
+                help you know each other a little better every day.</p>
+            <div class="spacer-md"></div>
+            <p style="font-size:11px; opacity:0.35; letter-spacing:0.1em;">nook · user guide · 2026</p>
+        </section>
+
+    </div><!-- /.app -->
+
+    <!-- ════ STICKY TOP BAR (injected after body so it overlays correctly) ════ -->
+    <div class="top-bar" id="topBar"
+        style="position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;display:none;">
+        <div class="top-bar-logo">N</div>
+        <div class="top-bar-title">Nook Guide</div>
+        <div class="top-bar-count" id="topBarCount">Section 1 of 9</div>
+    </div>
+
+    <!-- ════ BOTTOM NAV ════ -->
+    <div class="bottom-nav" id="bottomNav">
+        <span class="nav-prev" id="navPrev" onclick="navigate(-1)">‹</span>
+        <div id="navDots" style="display:flex;gap:8px;align-items:center;"></div>
+        <span class="nav-next" id="navNext" onclick="navigate(1)">›</span>
+    </div>
+
+    <script>
+        const sections = ['cover', 'toc', 's01', 's02', 's03', 's04', 's05', 's06', 's07', 's08', 's09', 'back-cover'];
+        const navSections = ['s01', 's02', 's03', 's04', 's05', 's06', 's07', 's08', 's09'];
+        const labels = ['Sign In', 'Onboarding', 'Space Setup', 'Home Feed', 'Daily Prompts', 'Memories', 'Profile', 'App Lock', 'Tips'];
+
+        let currentIdx = 0;
+
+        // Build dots
+        const dotsEl = document.getElementById('navDots');
+        navSections.forEach((id, i) => {
+            const dot = document.createElement('div');
+            dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+            dot.title = labels[i];
+            dot.onclick = () => { document.getElementById(id).scrollIntoView({ behavior: 'smooth' }); };
+            dotsEl.appendChild(dot);
+        });
+
+        function scrollTo(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+        window.scrollTo = scrollTo;
+
+        function navigate(dir) {
+            const idx = Math.max(0, Math.min(navSections.length - 1, currentIdx + dir));
+            document.getElementById(navSections[idx]).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Progress + active dot tracking
+        const progressFill = document.getElementById('progressFill');
+        const topBar = document.getElementById('topBar');
+        const topBarCount = document.getElementById('topBarCount');
+        const coverEl = document.getElementById('cover');
+
+        function onScroll() {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+            progressFill.style.width = pct + '%';
+
+            // Show/hide top bar after cover
+            const coverBottom = coverEl.getBoundingClientRect().bottom;
+            topBar.style.display = coverBottom < 0 ? 'flex' : 'none';
+
+            // Determine active nav section
+            let active = -1;
+            navSections.forEach((id, i) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    const rect = el.getBoundingClientRect();
+                    if (rect.top <= window.innerHeight * 0.5) active = i;
+                }
+            });
+
+            if (active >= 0 && active !== currentIdx) {
+                currentIdx = active;
+                document.querySelectorAll('.nav-dot').forEach((d, i) => {
+                    d.className = 'nav-dot' + (i === active ? ' active' : '');
+                });
+                topBarCount.textContent = `Section ${active + 1} of 9`;
+                document.getElementById('navPrev').style.opacity = active === 0 ? '0.3' : '1';
+                document.getElementById('navNext').style.opacity = active === navSections.length - 1 ? '0.3' : '1';
+            }
+        }
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+    </script>
+</body>
+
+</html>

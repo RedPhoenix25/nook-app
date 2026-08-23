@@ -112,18 +112,20 @@ export function useDailyPrompt(spaceId: string | null, partner: Profile | null, 
             const randomPrompt = availablePrompts[Math.floor(Math.random() * availablePrompts.length)];
             const randomText = randomPrompt.question || randomPrompt;
 
+            const nowIso = new Date().toISOString();
             const newPrompt = {
               id: generateUUID(),
               space_id: spaceId,
               author_id: user.id, // Must be a valid UUID for Supabase
               prompt_date: today,
               prompt_text: randomText,
-              created_at: new Date().toISOString()
+              created_at: nowIso,
+              updated_at: nowIso
             };
 
             await db.runAsync(
-              `INSERT INTO daily_prompts (id, space_id, author_id, prompt_date, prompt_text, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
-              newPrompt.id, newPrompt.space_id, newPrompt.author_id, newPrompt.prompt_date, newPrompt.prompt_text, newPrompt.created_at
+              `INSERT INTO daily_prompts (id, space_id, author_id, prompt_date, prompt_text, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              newPrompt.id, newPrompt.space_id, newPrompt.author_id, newPrompt.prompt_date, newPrompt.prompt_text, newPrompt.created_at, newPrompt.updated_at
             );
             
             await recordMutation(db, 'INSERT', 'daily_prompts', newPrompt.id, newPrompt);
@@ -203,20 +205,22 @@ export function useDailyPrompt(spaceId: string | null, partner: Profile | null, 
     if (!user) return { error: new Error("Not authenticated") };
 
     const db = await getDb();
+    const now = new Date().toISOString();
     const newResponse = {
       id: generateUUID(),
       prompt_id: promptId,
       space_id: spaceId,
       user_id: user.id,
       response_text: responseText,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      media_url: null,
+      created_at: now,
+      updated_at: now
     };
 
     try {
       await db.runAsync(
-        `INSERT INTO prompt_responses (id, prompt_id, space_id, user_id, response_text, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        newResponse.id, newResponse.prompt_id, newResponse.space_id, newResponse.user_id, newResponse.response_text, newResponse.created_at, newResponse.updated_at
+        `INSERT INTO prompt_responses (id, prompt_id, space_id, user_id, response_text, media_url, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        newResponse.id, newResponse.prompt_id, newResponse.space_id, newResponse.user_id, newResponse.response_text, newResponse.media_url, newResponse.created_at, newResponse.updated_at
       );
       
       await recordMutation(db, 'INSERT', 'prompt_responses', newResponse.id, newResponse);

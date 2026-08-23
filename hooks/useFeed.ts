@@ -150,7 +150,7 @@ export function useFeed() {
       await recordMutation(db, 'INSERT', 'notes', newNote.id, newNote);
 
       // 3. Update UI
-      setNotes((prev) => sortNotes([newNote as Note, ...prev]));
+      setNotes((prev) => sortNotes([{ ...newNote, is_pinned: false } as Note, ...prev]));
       
       // 4. Send push notification if online
       if (isOnline && partner?.expo_push_token) {

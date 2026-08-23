@@ -68,7 +68,7 @@ export function useMemories() {
           
           if (row.user_id === currentUserId) {
             group.myResponse = row as PromptResponse;
-          } else if (partnerId && row.user_id === partnerId) {
+          } else {
             group.partnerResponse = row as PromptResponse;
           }
           

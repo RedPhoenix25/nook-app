@@ -127,7 +127,7 @@ function AuthGate({ session, isLoading, children }: { session: Session | null; i
     } else {
       setHasSpace(true);
       
-      let foundCurrentUserProfile = null;
+      let foundCurrentUserProfile: any = null;
       
       const parsedSpaces: SpaceMeta[] = data.map((row: any) => {
         const space = row.spaces;
@@ -222,7 +222,7 @@ function AuthGate({ session, isLoading, children }: { session: Session | null; i
         if (inAuthGroup) router.replace("/(app)");
       } else {
         // Signed in WITHOUT space → go to onboarding
-        if (!inOnboarding) router.replace("/(onboarding)");
+        if (!inOnboarding) router.replace("/(onboarding)" as any);
       }
     }
   }, [session, isLoading, segments, hasSpace, checkingSpace]);

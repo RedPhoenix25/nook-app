@@ -361,7 +361,9 @@ export default function FeedScreen() {
 
                   <TouchableOpacity 
                     className="items-center"
-                    onPress={() => confirmDelete(longPressedNote.id)}
+                    onPress={() => {
+                      if (longPressedNote) confirmDelete(longPressedNote.id);
+                    }}
                   >
                     <View className="w-12 h-12 rounded-full bg-neutral-800 items-center justify-center mb-2">
                       <Trash size={22} color="#E06D53" />
@@ -383,7 +385,7 @@ export default function FeedScreen() {
 
       <CreateNoteModal
         visible={isCreateModalVisible}
-        onClose={() => setIsCreateModalVisible(false)}
+        onClose={() => setCreateModalVisible(false)}
         spaceId={spaceId}
         onSubmit={addNote}
         partner={partner}
@@ -416,7 +418,9 @@ export default function FeedScreen() {
                   </TouchableOpacity>
                   <TouchableOpacity 
                     disabled={isDeleting}
-                    onPress={() => confirmDelete(selectedNote.id)}
+                    onPress={() => {
+                      if (selectedNote) confirmDelete(selectedNote.id);
+                    }}
                     className="p-2 min-h-[44px] min-w-[44px] items-center justify-center"
                   >
                     {isDeleting ? <ActivityIndicator size="small" /> : <Trash size={22} color="#E06D53" />}
@@ -489,7 +493,7 @@ export default function FeedScreen() {
         spaceId={spaceId}
         initialContent={editingNote?.content || ""}
         initialMediaUrl={editingNote?.media_url || ""}
-        initialMediaType={editingNote?.note_type}
+        initialMediaType={editingNote?.note_type as any}
         onSubmit={async (content, type, url) => {
           if (editingNote) {
             return await updateNote(editingNote.id, content, url);
