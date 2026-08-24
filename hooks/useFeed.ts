@@ -47,7 +47,11 @@ export function useFeed() {
           setSpaceId(null);
           setPartner(null);
           setNotes([]);
-          setError("No active space found. You may need to create a new one.");
+          if (spaces.length === 0) {
+            setError("No active space found. You may need to create a new one.");
+          } else {
+            setError(null);
+          }
           if (isInitialLoad.current) setLoading(false);
           isInitialLoad.current = false;
         }
@@ -70,6 +74,7 @@ export function useFeed() {
         
         if (isMounted) {
           setSpaceId(activeSpaceId);
+          setError(null); // Clear error on valid space
           if (contextUserProfile) {
             setCurrentUserProfile(contextUserProfile);
           } else {
@@ -97,7 +102,10 @@ export function useFeed() {
         }));
         
         console.log(`[useFeed] Fetched ${mappedNotes.length} notes from SQLite for space ${activeSpaceId}`);
-        if (isMounted) setNotes(mappedNotes);
+        if (isMounted) {
+          setNotes(mappedNotes);
+          setError(null);
+        }
 
       } catch (err: any) {
         if (isMounted) setError(err.message);

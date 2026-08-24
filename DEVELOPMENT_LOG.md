@@ -16,12 +16,13 @@ This file serves as the central source of truth for the project's development pr
   - **Fixed Android Image Uploads**: Modified `CreateNoteModal` to instantly upload images to Supabase using the base64 data already in memory instead of relying on unstable `file://` temporary paths that were getting deleted by Android before the background sync could process them.
   - **Fixed Authorship Tagging**: Added the partner's `id` to `SpaceMeta` so that the UI can accurately distinguish which user authored a note (fixing the "YOU" tag bug on partner notes).
 - **Smart Prompt Generation**: Replaced hardcoded fallback prompts with a robust backend `prompts` table containing 80 categorized questions. Updated `useSyncEngine.tsx` to cache this prompt bank locally, allowing `useDailyPrompt.ts` to intelligently filter out past prompts and generate fresh, non-repeating daily questions even while completely offline.
-- **Fixed Daily Prompts & Memories Sync**: 
-  - Fixed a critical SQLite schema constraint where `daily_prompts.updated_at` had a `NOT NULL` constraint without default values, causing the pull sync and local prompt creation to fail with an uncaught SQLite error.
-  - Bumped database to `nook_v4.db` with clean default values for all timestamp columns (`DEFAULT '1970-01-01T00:00:00.000Z'`) and added the missing `media_url` column to `prompt_responses`.
-  - Updated `useSyncEngine.tsx` to reliably pull all accessible daily prompts, prompt responses, and the question bank from Supabase and insert them into local SQLite with all required column defaults.
-  - Replaced the infinite loading spinner in `app/(app)/prompt.tsx` with a fallback UI when prompts are generating.
-  - Updated `useMemories.ts` and `app/(app)/memories.tsx` to reliably show all answered prompt memories with dual-unlock blurred states for in-progress prompts.
+- **Fixed Space Persistence & Error Handling**: 
+  - Stored cached space metadata (`cached_spaces_meta`) and active space ID in `SecureStore` to load immediately upon cold start or background resume with 0ms delay.
+  - Fixed `refreshSpace()` to preserve existing spaces upon transient network/timeout errors rather than wiping the state.
+  - Fixed `useFeed.ts` to clear error state on valid space loads and prevent false "Database Error: No active space found" banners.
+- **Fixed Delete Space Functionality**:
+  - Created `delete_space(target_space_id)` PostgreSQL RPC function with `SECURITY DEFINER` and updated RLS delete policies on `public.spaces` to allow authorized space deletion with full cascading cleanup.
+  - Updated `app/(app)/profile.tsx` to call `delete_space` RPC, wipe local SQLite data for the space, and clear `SecureStore` active space references.
 - **UI/UX Global Audit Pass**: 
   - Redesigned the Onboarding Hub (`Welcome to NOOK`) with premium glassmorphism (`expo-blur`), smooth entrance animations (`react-native-reanimated`), and a clean, luxury aesthetic.
   - Refactored the core `Button`, `Card`, and `Header` components to perfectly match the new pill-badge capsule aesthetic (using `rounded-full` and 8pt soft borders).

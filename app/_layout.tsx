@@ -87,6 +87,38 @@ function AuthGate({ session, isLoading, children }: { session: Session | null; i
   const [checkingSpace, setCheckingSpace] = useState(false);
   const [hasSpace, setHasSpace] = useState<boolean | null>(null);
 
+  // Load cached space metadata immediately on mount so the app displays instantly with 0ms delay
+  useEffect(() => {
+    async function loadCachedSpaces() {
+      if (!session) return;
+      try {
+        const cachedSpacesRaw = await SecureStore.getItemAsync('cached_spaces_meta');
+        const cachedUserRaw = await SecureStore.getItemAsync('cached_user_profile');
+        const cachedActiveId = await SecureStore.getItemAsync('last_active_space_id');
+
+        if (cachedSpacesRaw) {
+          const parsed = JSON.parse(cachedSpacesRaw) as SpaceMeta[];
+          if (parsed && parsed.length > 0) {
+            setSpaces(parsed);
+            setHasSpace(true);
+            if (cachedActiveId && parsed.some(s => s.id === cachedActiveId)) {
+              setActiveSpaceId(cachedActiveId);
+            } else {
+              setActiveSpaceId(parsed[0].id);
+            }
+          }
+        }
+
+        if (cachedUserRaw) {
+          setCurrentUserProfile(JSON.parse(cachedUserRaw));
+        }
+      } catch (e) {
+        console.log('[AuthGate] Error reading cached space metadata:', e);
+      }
+    }
+    loadCachedSpaces();
+  }, [session]);
+
   const refreshSpace = async () => {
     if (!session) {
       setHasSpace(null);
@@ -97,78 +129,97 @@ function AuthGate({ session, isLoading, children }: { session: Session | null; i
     }
     setCheckingSpace(true);
     
-    // Fetch all active space memberships for the user, along with space data and other members
-    const { data, error } = await supabase
-      .from("space_members")
-      .select(`
-        space_id,
-        spaces:space_id (
-          id,
-          name,
-          space_members (
-            user_id,
-            profiles (
-              id,
-              display_name,
-              avatar_url,
-              expo_push_token
+    try {
+      // Fetch all active space memberships for the user, along with space data and other members
+      const { data, error } = await supabase
+        .from("space_members")
+        .select(`
+          space_id,
+          spaces:space_id (
+            id,
+            name,
+            space_members (
+              user_id,
+              profiles (
+                id,
+                display_name,
+                avatar_url,
+                expo_push_token
+              )
             )
           )
-        )
-      `)
-      .eq("user_id", session.user.id)
-      .eq("is_active", true);
-      
-    if (error || !data || data.length === 0) {
-      setHasSpace(false);
-      setSpaces([]);
-      setActiveSpaceId(null);
-      setCurrentUserProfile(null);
-    } else {
-      setHasSpace(true);
-      
-      let foundCurrentUserProfile: any = null;
-      
-      const parsedSpaces: SpaceMeta[] = data.map((row: any) => {
-        const space = row.spaces;
-        // Find the partner (a member who is not the current user)
-        const partnerMember = space.space_members?.find((m: any) => m.user_id !== session.user.id);
-        const partnerProfile = partnerMember?.profiles;
+        `)
+        .eq("user_id", session.user.id)
+        .eq("is_active", true);
         
-        // Also capture the current user's profile
-        if (!foundCurrentUserProfile) {
-          const myMember = space.space_members?.find((m: any) => m.user_id === session.user.id);
-          if (myMember?.profiles) {
-            foundCurrentUserProfile = myMember.profiles;
-          }
-        }
-        
-        return {
-          id: space.id,
-          name: space.name,
-          partner: partnerProfile ? {
-            id: partnerMember.user_id,
-            display_name: partnerProfile.display_name,
-            avatar_url: partnerProfile.avatar_url,
-            expo_push_token: partnerProfile.expo_push_token,
-          } : undefined
-        };
-      });
-      
-      setSpaces(parsedSpaces);
-      setCurrentUserProfile(foundCurrentUserProfile);
-      
-      // Determine active space
-      const lastActiveId = await SecureStore.getItemAsync('last_active_space_id');
-      if (lastActiveId && parsedSpaces.some(s => s.id === lastActiveId)) {
-        setActiveSpaceId(lastActiveId);
-      } else {
-        // Fallback to the first space
-        setActiveSpaceId(parsedSpaces[0].id);
-        await SecureStore.setItemAsync('last_active_space_id', parsedSpaces[0].id);
+      if (error) {
+        console.warn("[AuthGate] Network/transient error fetching space_members:", error.message);
+        // Do NOT wipe out existing spaces if this was just a transient network/connection error!
+        setCheckingSpace(false);
+        return;
       }
+
+      if (!data || data.length === 0) {
+        // User truly has NO active space memberships
+        setHasSpace(false);
+        setSpaces([]);
+        setActiveSpaceId(null);
+        await SecureStore.deleteItemAsync('cached_spaces_meta');
+        await SecureStore.deleteItemAsync('last_active_space_id');
+      } else {
+        setHasSpace(true);
+        
+        let foundCurrentUserProfile: any = null;
+        
+        const parsedSpaces: SpaceMeta[] = data.map((row: any) => {
+          const space = row.spaces;
+          // Find the partner (a member who is not the current user)
+          const partnerMember = space.space_members?.find((m: any) => m.user_id !== session.user.id);
+          const partnerProfile = partnerMember?.profiles;
+          
+          // Also capture the current user's profile
+          if (!foundCurrentUserProfile) {
+            const myMember = space.space_members?.find((m: any) => m.user_id === session.user.id);
+            if (myMember?.profiles) {
+              foundCurrentUserProfile = myMember.profiles;
+            }
+          }
+          
+          return {
+            id: space.id,
+            name: space.name,
+            partner: partnerProfile ? {
+              id: partnerMember.user_id,
+              display_name: partnerProfile.display_name,
+              avatar_url: partnerProfile.avatar_url,
+              expo_push_token: partnerProfile.expo_push_token,
+            } : undefined
+          };
+        });
+        
+        setSpaces(parsedSpaces);
+        if (foundCurrentUserProfile) {
+          setCurrentUserProfile(foundCurrentUserProfile);
+          await SecureStore.setItemAsync('cached_user_profile', JSON.stringify(foundCurrentUserProfile));
+        }
+
+        await SecureStore.setItemAsync('cached_spaces_meta', JSON.stringify(parsedSpaces));
+        
+        // Determine active space
+        const lastActiveId = await SecureStore.getItemAsync('last_active_space_id');
+        if (lastActiveId && parsedSpaces.some(s => s.id === lastActiveId)) {
+          setActiveSpaceId(lastActiveId);
+        } else {
+          // Fallback to the first space
+          setActiveSpaceId(parsedSpaces[0].id);
+          await SecureStore.setItemAsync('last_active_space_id', parsedSpaces[0].id);
+        }
+      }
+    } catch (e: any) {
+      console.warn("[AuthGate] Unexpected error during refreshSpace:", e?.message);
+    } finally {
+      setCheckingSpace(false);
     }
-    setCheckingSpace(false);
   };
 
   const switchSpace = async (spaceId: string) => {

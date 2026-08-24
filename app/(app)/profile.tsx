@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { signOut } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
+import { getDb } from "@/lib/database";
+import * as SecureStore from 'expo-secure-store';
 import { useFeed } from "@/hooks/useFeed";
 import { useMemories, MemoryPrompt } from "@/hooks/useMemories";
 import type { Space } from "@/types/database.types";
@@ -110,38 +112,81 @@ export default function ProfileScreen() {
   const confirmLeaveSpace = async () => {
     if (!currentUserProfile?.id || !spaceId) return;
     setIsLeavingSubmitting(true);
-    await supabase.from('space_members')
-      .update({ is_active: false })
-      .eq('space_id', spaceId)
-      .eq('user_id', currentUserProfile.id);
-    
-    setIsLeavingSubmitting(false);
-    setIsLeaving(false);
-    
-    // Refresh the global space state. AuthGate will automatically route them to onboarding if they have no spaces left.
-    // If they have other spaces, it will automatically switch to one of them.
-    await refreshSpace();
-    
-    // We don't route manually, let AuthGate handle it!
+    try {
+      await supabase.from('space_members')
+        .update({ is_active: false })
+        .eq('space_id', spaceId)
+        .eq('user_id', currentUserProfile.id);
+      
+      // Clean local SQLite data for this space
+      const db = await getDb();
+      await db.runAsync(`DELETE FROM notes WHERE space_id = ?`, spaceId);
+      await db.runAsync(`DELETE FROM daily_prompts WHERE space_id = ?`, spaceId);
+      await db.runAsync(`DELETE FROM prompt_responses WHERE space_id = ?`, spaceId);
+
+      const lastActiveId = await SecureStore.getItemAsync('last_active_space_id');
+      if (lastActiveId === spaceId) {
+        await SecureStore.deleteItemAsync('last_active_space_id');
+      }
+
+      setIsLeavingSubmitting(false);
+      setIsLeaving(false);
+      
+      await refreshSpace();
+    } catch (e: any) {
+      console.error('[confirmLeaveSpace] Error leaving space:', e);
+      setIsLeavingSubmitting(false);
+      setIsLeaving(false);
+      await refreshSpace();
+    }
   };
 
   const confirmDeleteSpace = async () => {
-    if (!spaceId) return;
+    if (!spaceId || !currentUserProfile?.id) return;
     setIsDeletingSpaceSubmitting(true);
     
-    // Delete the space from Supabase. Assuming ON DELETE CASCADE is set up, this will clear related data.
-    const { error } = await supabase.from('spaces').delete().eq('id', spaceId);
-    
-    if (error) {
-      Alert.alert("Error", "Could not delete the space. Please try again.");
+    try {
+      // 1. First try calling the RPC delete_space (bypasses RLS with SECURITY DEFINER)
+      const { error: rpcError } = await supabase.rpc('delete_space', { target_space_id: spaceId });
+      
+      if (rpcError) {
+        console.log('[confirmDeleteSpace] RPC error, trying direct table delete:', rpcError.message);
+        // Fallback: direct table delete
+        const { error: deleteError } = await supabase.from('spaces').delete().eq('id', spaceId);
+        if (deleteError) {
+          console.error('[confirmDeleteSpace] Direct delete failed:', deleteError.message);
+          // Secondary fallback: if direct delete failed, deactivate membership (leave space)
+          const { error: leaveError } = await supabase.from('space_members')
+            .update({ is_active: false })
+            .eq('space_id', spaceId)
+            .eq('user_id', currentUserProfile.id);
+            
+          if (leaveError) throw leaveError;
+        }
+      }
+
+      // 2. Clear local SQLite data for this space
+      const db = await getDb();
+      await db.runAsync(`DELETE FROM notes WHERE space_id = ?`, spaceId);
+      await db.runAsync(`DELETE FROM daily_prompts WHERE space_id = ?`, spaceId);
+      await db.runAsync(`DELETE FROM prompt_responses WHERE space_id = ?`, spaceId);
+
+      // 3. Clear cached active space if it matches
+      const lastActiveId = await SecureStore.getItemAsync('last_active_space_id');
+      if (lastActiveId === spaceId) {
+        await SecureStore.deleteItemAsync('last_active_space_id');
+      }
+
       setIsDeletingSpaceSubmitting(false);
-      return;
+      setIsDeletingSpace(false);
+
+      // 4. Refresh global space state
+      await refreshSpace();
+    } catch (err: any) {
+      console.error('[confirmDeleteSpace] Failed to delete space:', err);
+      Alert.alert("Error", err.message || "Could not delete the space. Please try again.");
+      setIsDeletingSpaceSubmitting(false);
     }
-    
-    setIsDeletingSpaceSubmitting(false);
-    setIsDeletingSpace(false);
-    
-    await refreshSpace();
   };
 
   const confirmDeleteAccount = async () => {

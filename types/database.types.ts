@@ -318,6 +318,10 @@ export interface Database {
         Args: Record<PropertyKey, never>;
         Returns: void;
       };
+      delete_space: {
+        Args: { target_space_id: string };
+        Returns: boolean;
+      };
     };
     Enums: {
       note_type: NoteType;
